@@ -1,15 +1,513 @@
-export function OutputPanel() {
+import { useState, useEffect, useRef } from 'react';
+import { Card } from '@/components/card/Card';
+import { 
+  Monitor, 
+  Code, 
+  BugBeetle, 
+  Terminal,
+  Link as LinkIcon,
+  CheckCircle,
+  XCircle,
+  Clock
+} from '@phosphor-icons/react';
+
+export interface Project {
+  id: string;
+  name: string;
+  framework: string;
+  description?: string;
+  status?: 'creating' | 'installing' | 'starting' | 'ready' | 'error';
+  devServerUrl?: string;
+  sentryDsn?: string;
+  sentryConfigured?: boolean;
+  port?: number;
+}
+
+export interface LogEntry {
+  timestamp: string;
+  level: 'info' | 'error' | 'success' | 'warn';
+  message: string;
+  projectId: string;
+}
+
+interface OutputPanelProps {
+  project?: Project;
+  logs?: LogEntry[];
+  connected?: boolean;
+}
+
+type TabType = 'preview' | 'code' | 'sentry' | 'logs';
+
+export function OutputPanel({ project, logs = [], connected = false }: OutputPanelProps) {
+  const [activeTab, setActiveTab] = useState<TabType>('preview');
+  const logsEndRef = useRef<HTMLDivElement>(null);
+
+  // Switch to preview tab when project becomes ready
+  useEffect(() => {
+    if (project?.status === 'ready' && project?.devServerUrl) {
+      setActiveTab('preview');
+    }
+  }, [project?.status, project?.devServerUrl]);
+
+  // Auto-scroll logs to bottom when new logs arrive
+  useEffect(() => {
+    if (logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs]);
+
+  if (!project) {
+    return (
+      <div className="h-full w-full flex flex-col bg-neutral-50 dark:bg-neutral-950 border-l border-neutral-300 dark:border-neutral-800">
+        {/* Main content */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4 p-8">
+            <div className="text-6xl animate-pulse">👨‍🍳</div>
+            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+              Let's get cooking
+            </h2>
+            <p className="text-muted-foreground">
+              Ask me to build an app and it will appear here
+            </p>
+          </div>
+        </div>
+
+        {/* Dev server logs section - always visible */}
+        <div className="h-64 border-t border-neutral-300 dark:border-neutral-800 bg-neutral-900 overflow-hidden flex flex-col">
+          <div className="px-4 py-2 border-b border-neutral-700 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-neutral-300">Build Logs</h3>
+              {connected ? (
+                <span className="flex items-center gap-1 text-xs text-green-400">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  Live
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-xs text-red-400">
+                  <span className="w-2 h-2 bg-red-400 rounded-full" />
+                  Disconnected
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-neutral-500">
+              {logs.length} {logs.length === 1 ? 'log' : 'logs'}
+            </span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 font-mono text-sm">
+            {logs.length > 0 ? (
+              <div className="space-y-1">
+                {logs.slice(-50).map((log, index) => (
+                  <div
+                    key={`${log.timestamp}-${index}`}
+                    className={`flex gap-3 ${
+                      log.level === 'error' ? 'text-red-400' :
+                      log.level === 'success' ? 'text-green-400' :
+                      log.level === 'warn' ? 'text-yellow-400' :
+                      'text-neutral-300'
+                    }`}
+                  >
+                    <span className="text-neutral-500 text-xs whitespace-nowrap">
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </span>
+                    <span className="uppercase text-xs font-bold w-16 whitespace-nowrap">
+                      [{log.level}]
+                    </span>
+                    <span className="flex-1 break-words">{log.message}</span>
+                  </div>
+                ))}
+                <div ref={logsEndRef} />
+              </div>
+            ) : (
+              <div className="text-neutral-500 text-sm">
+                <p>Waiting for build process to start...</p>
+                <p className="mt-2 text-xs">Build logs and dev server output will appear here once you request an app.</p>
+                <p className="mt-4 text-xs text-neutral-600">
+                  💡 Tip: Ask the AI to "build me a React todo app" to get started
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full w-full flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 border-l border-neutral-300 dark:border-neutral-800">
-      <div className="text-center space-y-4 p-8">
-        <div className="text-6xl animate-pulse">👨‍🍳</div>
-        <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Your creation is cooking
-        </h2>
-        <p className="text-muted-foreground">
-          The output will appear here
-        </p>
+    <div className="h-full w-full flex flex-col bg-neutral-50 dark:bg-neutral-950 border-l border-neutral-300 dark:border-neutral-800">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-base">{project.name}</h2>
+            <p className="text-xs text-muted-foreground">
+              {project.framework} • {getStatusText(project.status)}
+            </p>
+          </div>
+          {project.devServerUrl && (
+            <a
+              href={project.devServerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-[#F48120] hover:underline"
+            >
+              <LinkIcon size={16} />
+              Open in new tab
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+        <TabButton
+          icon={<Monitor size={16} />}
+          label="Preview"
+          active={activeTab === 'preview'}
+          onClick={() => setActiveTab('preview')}
+          disabled={!project.devServerUrl}
+        />
+        <TabButton
+          icon={<Code size={16} />}
+          label="Code"
+          active={activeTab === 'code'}
+          onClick={() => setActiveTab('code')}
+        />
+        <TabButton
+          icon={<BugBeetle size={16} />}
+          label="Sentry"
+          active={activeTab === 'sentry'}
+          onClick={() => setActiveTab('sentry')}
+          badge={project.sentryConfigured}
+        />
+        <TabButton
+          icon={<Terminal size={16} />}
+          label="Logs"
+          active={activeTab === 'logs'}
+          onClick={() => setActiveTab('logs')}
+          badge={logs.length > 0}
+        />
+      </div>
+
+      {/* Tab Content */}
+      <div className="flex-1 overflow-hidden">
+        {activeTab === 'preview' && <PreviewTab project={project} />}
+        {activeTab === 'code' && <CodeTab project={project} />}
+        {activeTab === 'sentry' && <SentryTab project={project} />}
+        {activeTab === 'logs' && <LogsTab logs={logs} projectId={project.id} />}
       </div>
     </div>
   );
+}
+
+function TabButton({
+  icon,
+  label,
+  active,
+  onClick,
+  disabled = false,
+  badge = false
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+  badge?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors relative
+        ${active 
+          ? 'border-[#F48120] text-[#F48120]' 
+          : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+        }
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+      `}
+    >
+      {icon}
+      {label}
+      {badge && (
+        <span className="w-2 h-2 bg-[#F48120] rounded-full absolute top-1 right-1" />
+      )}
+    </button>
+  );
+}
+
+function PreviewTab({ project }: { project: Project }) {
+  if (!project.devServerUrl) {
+    return (
+      <div className="h-full flex items-center justify-center p-8">
+        <div className="text-center space-y-4">
+          <div className="text-4xl">⏳</div>
+          <h3 className="font-semibold text-lg">Starting dev server...</h3>
+          <p className="text-sm text-muted-foreground">
+            Your app will appear here shortly
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full w-full bg-white dark:bg-neutral-950">
+      <iframe
+        src={project.devServerUrl}
+        className="w-full h-full border-0"
+        title={`Preview: ${project.name}`}
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox"
+        allow="cross-origin-isolated"
+      />
+    </div>
+  );
+}
+
+function CodeTab({ project }: { project: Project }) {
+  return (
+    <div className="h-full overflow-auto p-4">
+      <div className="space-y-4">
+        <div>
+          <h3 className="font-semibold mb-2">Project Information</h3>
+          <Card className="p-4 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Framework:</span>
+              <span className="text-sm font-medium capitalize">{project.framework}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Status:</span>
+              <span className="text-sm font-medium">{getStatusText(project.status)}</span>
+            </div>
+            {project.port && (
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Port:</span>
+                <span className="text-sm font-medium">{project.port}</span>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        <div>
+          <h3 className="font-semibold mb-2">Description</h3>
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">
+              {project.description || 'No description provided'}
+            </p>
+          </Card>
+        </div>
+
+        <div>
+          <h3 className="font-semibold mb-2">Features</h3>
+          <Card className="p-4">
+            <ul className="text-sm space-y-2">
+              <li className="flex items-center gap-2">
+                <CheckCircle size={16} className="text-green-500" />
+                <span>Modern {project.framework} setup</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle size={16} className="text-green-500" />
+                <span>TypeScript support</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle size={16} className="text-green-500" />
+                <span>Hot module replacement</span>
+              </li>
+              <li className="flex items-center gap-2">
+                {project.sentryConfigured ? (
+                  <CheckCircle size={16} className="text-green-500" />
+                ) : (
+                  <Clock size={16} className="text-yellow-500" />
+                )}
+                <span>Sentry monitoring {!project.sentryConfigured && '(pending)'}</span>
+              </li>
+            </ul>
+          </Card>
+        </div>
+
+        <div>
+          <h3 className="font-semibold mb-2">Next Steps</h3>
+          <Card className="p-4">
+            <ol className="text-sm space-y-2 list-decimal list-inside">
+              <li>Test the demo buttons in the preview</li>
+              <li>Check Sentry dashboard for captured events</li>
+              <li>Customize the code as needed</li>
+              <li>Deploy when ready</li>
+            </ol>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SentryTab({ project }: { project: Project }) {
+  if (!project.sentryConfigured) {
+    return (
+      <div className="h-full flex items-center justify-center p-8">
+        <div className="text-center space-y-4 max-w-md">
+          <div className="text-4xl">🔧</div>
+          <h3 className="font-semibold text-lg">Sentry Not Configured</h3>
+          <p className="text-sm text-muted-foreground">
+            Provide a Sentry DSN in the chat to enable error tracking, performance monitoring, 
+            session replay, and logs for this project.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-auto p-4">
+      <div className="space-y-4">
+        <div>
+          <h3 className="font-semibold mb-2 flex items-center gap-2">
+            <CheckCircle size={20} className="text-green-500" />
+            Sentry Configured
+          </h3>
+          <Card className="p-4 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              This project is integrated with Sentry for comprehensive monitoring.
+            </p>
+            
+            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
+              <h4 className="text-sm font-medium mb-2">Enabled Features:</h4>
+              <ul className="space-y-2">
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span>Error Tracking</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span>Performance Monitoring</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span>Session Replay</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span>Logs & Breadcrumbs</span>
+                </li>
+              </ul>
+            </div>
+
+            {project.sentryDsn && (
+              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                <h4 className="text-sm font-medium mb-2">DSN:</h4>
+                <code className="text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded block break-all">
+                  {project.sentryDsn}
+                </code>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        <div>
+          <h3 className="font-semibold mb-2">Test Sentry Integration</h3>
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground mb-3">
+              Use the demo buttons in the Preview tab to test Sentry:
+            </p>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="font-medium">🐛 Trigger Error:</span>
+                <span className="text-muted-foreground">Throws a test error to verify error tracking</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-medium">🐢 Slow API Call:</span>
+                <span className="text-muted-foreground">Simulates slow performance for monitoring</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-medium">💬 User Feedback:</span>
+                <span className="text-muted-foreground">Opens the Sentry feedback dialog</span>
+              </li>
+            </ul>
+          </Card>
+        </div>
+
+        <div>
+          <h3 className="font-semibold mb-2">View in Sentry</h3>
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground mb-3">
+              Check your Sentry dashboard to see captured events, performance data, and session replays.
+            </p>
+            <a
+              href="https://sentry.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-[#F48120] hover:underline"
+            >
+              <LinkIcon size={16} />
+              Open Sentry Dashboard
+            </a>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LogsTab({ logs, projectId }: { logs: LogEntry[]; projectId: string }) {
+  const projectLogs = logs.filter(log => log.projectId === projectId);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new logs arrive
+  useEffect(() => {
+    if (logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [projectLogs.length]);
+
+  if (projectLogs.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center p-8">
+        <div className="text-center space-y-4">
+          <div className="text-4xl">📝</div>
+          <h3 className="font-semibold text-lg">No logs yet</h3>
+          <p className="text-sm text-muted-foreground">
+            Build logs will appear here as your project is created
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-auto p-4 bg-neutral-900 font-mono text-sm">
+      <div className="space-y-1">
+        {projectLogs.map((log, index) => (
+          <div
+            key={`${log.timestamp}-${index}`}
+            className={`flex gap-3 ${
+              log.level === 'error' ? 'text-red-400' :
+              log.level === 'success' ? 'text-green-400' :
+              log.level === 'warn' ? 'text-yellow-400' :
+              'text-neutral-300'
+            }`}
+          >
+            <span className="text-neutral-500 text-xs whitespace-nowrap">
+              {new Date(log.timestamp).toLocaleTimeString()}
+            </span>
+            <span className="uppercase text-xs font-bold w-16 whitespace-nowrap">
+              [{log.level}]
+            </span>
+            <span className="flex-1 break-words">{log.message}</span>
+          </div>
+        ))}
+        <div ref={logsEndRef} />
+      </div>
+    </div>
+  );
+}
+
+function getStatusText(status?: Project['status']): string {
+  switch (status) {
+    case 'creating': return 'Creating project...';
+    case 'installing': return 'Installing dependencies...';
+    case 'starting': return 'Starting dev server...';
+    case 'ready': return 'Ready';
+    case 'error': return 'Error';
+    default: return 'Unknown';
+  }
 }

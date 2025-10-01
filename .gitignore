@@ -147,3 +147,7 @@ dist
 !.dev.vars.example
 .env*
 !.env.example
+
+# Generated projects (optional - uncomment to ignore generated apps)
+# projects/*
+# !projects/.gitkeep

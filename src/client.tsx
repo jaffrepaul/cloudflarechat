@@ -12,3 +12,8 @@ root.render(
     </div>
   </Providers>
 );
+
+// Accept HMR updates to prevent full page reloads
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}
