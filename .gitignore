@@ -148,6 +148,6 @@ dist
 .env*
 !.env.example
 
-# Generated projects (optional - uncomment to ignore generated apps)
-# projects/*
-# !projects/.gitkeep
+# Generated projects - excluded to prevent exposing Sentry DSNs and other secrets
+projects/*
+!projects/.gitkeep

@@ -242,8 +242,7 @@ export class ProjectManager {
       // Replace placeholders
       let processedContent = content
         .replace(/\{\{PROJECT_NAME\}\}/g, project.name)
-        .replace(/\{\{DESCRIPTION\}\}/g, project.description || 'A new application')
-        .replace(/\{\{SENTRY_DSN\}\}/g, ''); // Empty for now, will be configured later
+        .replace(/\{\{DESCRIPTION\}\}/g, project.description || 'A new application');
 
       const fullPath = join(project.path, filePath);
       const dir = join(fullPath, '..');
@@ -512,24 +511,14 @@ export class ProjectManager {
 
     this.log(projectId, 'info', 'Configuring Sentry integration...');
 
-    // Read the sentry template file and replace DSN
-    const sentryFilePath = join(project.path, 'src', 'sentry.ts');
-    const sentryConfigPath = join(project.path, 'sentry.config.ts');
+    // Create .env file with the Sentry DSN
+    const envFilePath = join(project.path, '.env');
+    const envContent = `# Sentry Configuration
+VITE_SENTRY_DSN=${sentryDsn}
+`;
 
-    // Check which file exists and update it
-    if (existsSync(sentryFilePath)) {
-      const content = await readFile(sentryFilePath, 'utf-8');
-      const updatedContent = content.replace('{{SENTRY_DSN}}', sentryDsn);
-      await writeFile(sentryFilePath, updatedContent, 'utf-8');
-      this.log(projectId, 'success', 'Sentry configured in src/sentry.ts');
-    } else if (existsSync(sentryConfigPath)) {
-      const content = await readFile(sentryConfigPath, 'utf-8');
-      const updatedContent = content.replace('{{SENTRY_DSN}}', sentryDsn);
-      await writeFile(sentryConfigPath, updatedContent, 'utf-8');
-      this.log(projectId, 'success', 'Sentry configured in sentry.config.ts');
-    } else {
-      throw new Error('Sentry configuration file not found');
-    }
+    await writeFile(envFilePath, envContent, 'utf-8');
+    this.log(projectId, 'success', 'Sentry DSN configured in .env file (gitignored)');
   }
 
   async cleanup() {

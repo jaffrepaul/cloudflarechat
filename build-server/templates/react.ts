@@ -38,6 +38,9 @@ export default defineConfig({
   server: {
     port: parseInt(process.env.PORT || '3000'),
     host: true
+  },
+  define: {
+    'import.meta.env.VITE_SENTRY_DSN': JSON.stringify(process.env.VITE_SENTRY_DSN || '')
   }
 })`,
 
@@ -89,6 +92,11 @@ export default defineConfig({
   </body>
 </html>`,
 
+  '.env.example': `# Sentry Configuration
+# Get your DSN from https://sentry.io
+VITE_SENTRY_DSN=your-sentry-dsn-here
+`,
+
   '.gitignore': `# Logs
 logs
 *.log
@@ -103,6 +111,11 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (includes Sentry DSN)
+.env
+.env.local
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -116,21 +129,27 @@ dist-ssr
 
   'src/sentry.ts': `import * as Sentry from "@sentry/react";
 
-Sentry.init({
-  dsn: "{{SENTRY_DSN}}",
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration({
-      maskAllText: false,
-      blockAllMedia: false,
-    }),
-  ],
-  // Performance Monitoring
-  tracesSampleRate: 1.0, // Capture 100% of transactions for testing
-  // Session Replay
-  replaysSessionSampleRate: 0.1, // 10% of sessions
-  replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
-});
+const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({
+        maskAllText: false,
+        blockAllMedia: false,
+      }),
+    ],
+    // Performance Monitoring
+    tracesSampleRate: 1.0, // Capture 100% of transactions for testing
+    // Session Replay
+    replaysSessionSampleRate: 0.1, // 10% of sessions
+    replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
+  });
+} else {
+  console.warn('Sentry DSN not configured. Set VITE_SENTRY_DSN in .env file.');
+}
 
 export default Sentry;`,
 
