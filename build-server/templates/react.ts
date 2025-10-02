@@ -1,5 +1,5 @@
 export const reactTemplate = {
-  'package.json': `{
+  "package.json": `{
   "name": "{{PROJECT_NAME}}",
   "private": true,
   "version": "0.0.0",
@@ -30,7 +30,7 @@ export const reactTemplate = {
   }
 }`,
 
-  'vite.config.ts': `import { defineConfig } from 'vite'
+  "vite.config.ts": `import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
@@ -41,7 +41,7 @@ export default defineConfig({
   }
 })`,
 
-  'tsconfig.json': `{
+  "tsconfig.json": `{
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
@@ -63,7 +63,7 @@ export default defineConfig({
   "references": [{ "path": "./tsconfig.node.json" }]
 }`,
 
-  'tsconfig.node.json': `{
+  "tsconfig.node.json": `{
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
@@ -75,7 +75,7 @@ export default defineConfig({
   "include": ["vite.config.ts"]
 }`,
 
-  'index.html': `<!doctype html>
+  "index.html": `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -89,12 +89,12 @@ export default defineConfig({
   </body>
 </html>`,
 
-  '.env.example': `# Sentry Configuration
+  ".env.example": `# Sentry Configuration
 # Get your DSN from https://sentry.io
 VITE_SENTRY_DSN=your-sentry-dsn-here
 `,
 
-  '.gitignore': `# Logs
+  ".gitignore": `# Logs
 logs
 *.log
 npm-debug.log*
@@ -124,7 +124,7 @@ dist-ssr
 *.sln
 *.sw?`,
 
-  'src/sentry.ts': `import * as Sentry from "@sentry/react";
+  "src/sentry.ts": `import * as Sentry from "@sentry/react";
 
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
 
@@ -150,7 +150,7 @@ if (sentryDsn) {
 
 export default Sentry;`,
 
-  'src/main.tsx': `import React from 'react'
+  "src/main.tsx": `import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
@@ -162,7 +162,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 )`,
 
-  'src/App.tsx': `import { useState } from 'react'
+  "src/App.tsx": `import { useState } from 'react'
 import * as Sentry from '@sentry/react'
 import './App.css'
 
@@ -254,7 +254,7 @@ function App() {
 
 export default App`,
 
-  'src/App.css': `#root {
+  "src/App.css": `#root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
@@ -358,7 +358,7 @@ export default App`,
   font-family: 'Courier New', monospace;
 }`,
 
-  'src/index.css': `:root {
+  "src/index.css": `:root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;

@@ -1,22 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
-import { Card } from '@/components/card/Card';
-import { 
-  Monitor, 
-  Code, 
-  BugBeetle, 
+import { useState, useEffect, useRef } from "react";
+import { Card } from "@/components/card/Card";
+import {
+  Monitor,
+  Code,
+  BugBeetle,
   Terminal,
   Link as LinkIcon,
-  CheckCircle,
-  XCircle,
-  Clock
-} from '@phosphor-icons/react';
+  CheckCircle
+} from "@phosphor-icons/react";
 
 export interface Project {
   id: string;
   name: string;
   framework: string;
   description?: string;
-  status?: 'creating' | 'installing' | 'starting' | 'ready' | 'error';
+  status?: "creating" | "installing" | "starting" | "ready" | "error";
   devServerUrl?: string;
   sentryDsn?: string;
   sentryConfigured?: boolean;
@@ -26,7 +24,7 @@ export interface Project {
 
 export interface LogEntry {
   timestamp: string;
-  level: 'info' | 'error' | 'success' | 'warn';
+  level: "info" | "error" | "success" | "warn";
   message: string;
   projectId: string;
 }
@@ -37,23 +35,27 @@ interface OutputPanelProps {
   connected?: boolean;
 }
 
-type TabType = 'preview' | 'code' | 'sentry' | 'logs';
+type TabType = "preview" | "code" | "sentry" | "logs";
 
-export function OutputPanel({ project, logs = [], connected = false }: OutputPanelProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('preview');
+export function OutputPanel({
+  project,
+  logs = [],
+  connected = false
+}: OutputPanelProps) {
+  const [activeTab, setActiveTab] = useState<TabType>("preview");
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   // Switch to preview tab when project becomes ready
   useEffect(() => {
-    if (project?.status === 'ready' && project?.devServerUrl) {
-      setActiveTab('preview');
+    if (project?.status === "ready" && project?.devServerUrl) {
+      setActiveTab("preview");
     }
   }, [project?.status, project?.devServerUrl]);
 
   // Auto-scroll logs to bottom when new logs arrive
   useEffect(() => {
     if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [logs]);
 
@@ -77,7 +79,9 @@ export function OutputPanel({ project, logs = [], connected = false }: OutputPan
         <div className="h-64 border-t border-neutral-300 dark:border-neutral-800 bg-neutral-900 overflow-hidden flex flex-col">
           <div className="px-4 py-2 border-b border-neutral-700 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-neutral-300">Build Logs</h3>
+              <h3 className="text-sm font-semibold text-neutral-300">
+                Build Logs
+              </h3>
               {connected ? (
                 <span className="flex items-center gap-1 text-xs text-green-400">
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
@@ -91,7 +95,7 @@ export function OutputPanel({ project, logs = [], connected = false }: OutputPan
               )}
             </div>
             <span className="text-xs text-neutral-500">
-              {logs.length} {logs.length === 1 ? 'log' : 'logs'}
+              {logs.length} {logs.length === 1 ? "log" : "logs"}
             </span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 font-mono text-sm">
@@ -101,10 +105,13 @@ export function OutputPanel({ project, logs = [], connected = false }: OutputPan
                   <div
                     key={`${log.timestamp}-${index}`}
                     className={`flex gap-3 ${
-                      log.level === 'error' ? 'text-red-400' :
-                      log.level === 'success' ? 'text-green-400' :
-                      log.level === 'warn' ? 'text-yellow-400' :
-                      'text-neutral-300'
+                      log.level === "error"
+                        ? "text-red-400"
+                        : log.level === "success"
+                          ? "text-green-400"
+                          : log.level === "warn"
+                            ? "text-yellow-400"
+                            : "text-neutral-300"
                     }`}
                   >
                     <span className="text-neutral-500 text-xs whitespace-nowrap">
@@ -121,9 +128,13 @@ export function OutputPanel({ project, logs = [], connected = false }: OutputPan
             ) : (
               <div className="text-neutral-500 text-sm">
                 <p>Waiting for build process to start...</p>
-                <p className="mt-2 text-xs">Build logs and dev server output will appear here once you request an app.</p>
+                <p className="mt-2 text-xs">
+                  Build logs and dev server output will appear here once you
+                  request an app.
+                </p>
                 <p className="mt-4 text-xs text-neutral-600">
-                  💡 Tip: Ask the AI to "build me a React todo app" to get started
+                  💡 Tip: Ask the AI to "build me a React todo app" to get
+                  started
                 </p>
               </div>
             )}
@@ -163,38 +174,38 @@ export function OutputPanel({ project, logs = [], connected = false }: OutputPan
         <TabButton
           icon={<Monitor size={16} />}
           label="Preview"
-          active={activeTab === 'preview'}
-          onClick={() => setActiveTab('preview')}
+          active={activeTab === "preview"}
+          onClick={() => setActiveTab("preview")}
           disabled={!project.devServerUrl}
         />
         <TabButton
           icon={<Code size={16} />}
           label="Code"
-          active={activeTab === 'code'}
-          onClick={() => setActiveTab('code')}
+          active={activeTab === "code"}
+          onClick={() => setActiveTab("code")}
         />
         <TabButton
           icon={<BugBeetle size={16} />}
           label="Sentry"
-          active={activeTab === 'sentry'}
-          onClick={() => setActiveTab('sentry')}
+          active={activeTab === "sentry"}
+          onClick={() => setActiveTab("sentry")}
           badge={project.sentryConfigured}
         />
         <TabButton
           icon={<Terminal size={16} />}
           label="Logs"
-          active={activeTab === 'logs'}
-          onClick={() => setActiveTab('logs')}
+          active={activeTab === "logs"}
+          onClick={() => setActiveTab("logs")}
           badge={logs.length > 0}
         />
       </div>
 
       {/* Tab Content */}
       <div className="flex-1 overflow-hidden">
-        {activeTab === 'preview' && <PreviewTab project={project} />}
-        {activeTab === 'code' && <CodeTab project={project} />}
-        {activeTab === 'sentry' && <SentryTab project={project} />}
-        {activeTab === 'logs' && <LogsTab logs={logs} projectId={project.id} />}
+        {activeTab === "preview" && <PreviewTab project={project} />}
+        {activeTab === "code" && <CodeTab project={project} />}
+        {activeTab === "sentry" && <SentryTab project={project} />}
+        {activeTab === "logs" && <LogsTab logs={logs} projectId={project.id} />}
       </div>
     </div>
   );
@@ -221,11 +232,12 @@ function TabButton({
       disabled={disabled}
       className={`
         flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors relative
-        ${active 
-          ? 'border-[#F48120] text-[#F48120]' 
-          : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+        ${
+          active
+            ? "border-[#F48120] text-[#F48120]"
+            : "border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
         }
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
       `}
     >
       {icon}
@@ -267,21 +279,24 @@ function PreviewTab({ project }: { project: Project }) {
 
 function CodeTab({ project }: { project: Project }) {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [fileContent, setFileContent] = useState<string>('');
+  const [fileContent, setFileContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
   const files = project.files || [];
 
   // Group files by directory
-  const fileTree = files.reduce((acc, file) => {
-    const parts = file.split('/');
-    const dir = parts.length > 1 ? parts[0] : 'root';
-    if (!acc[dir]) {
-      acc[dir] = [];
-    }
-    acc[dir].push(file);
-    return acc;
-  }, {} as Record<string, string[]>);
+  const fileTree = files.reduce(
+    (acc, file) => {
+      const parts = file.split("/");
+      const dir = parts.length > 1 ? parts[0] : "root";
+      if (!acc[dir]) {
+        acc[dir] = [];
+      }
+      acc[dir].push(file);
+      return acc;
+    },
+    {} as Record<string, string[]>
+  );
 
   const loadFileContent = async (filePath: string) => {
     setLoading(true);
@@ -290,13 +305,13 @@ function CodeTab({ project }: { project: Project }) {
         `http://localhost:3001/api/project/${project.id}/file?path=${encodeURIComponent(filePath)}`
       );
       if (response.ok) {
-        const data = await response.json();
+        const data = (await response.json()) as { content: string };
         setFileContent(data.content);
         setSelectedFile(filePath);
       }
     } catch (error) {
-      console.error('Failed to load file:', error);
-      setFileContent('// Error loading file');
+      console.error("Failed to load file:", error);
+      setFileContent("// Error loading file");
     } finally {
       setLoading(false);
     }
@@ -306,12 +321,14 @@ function CodeTab({ project }: { project: Project }) {
   useEffect(() => {
     if (files.length > 0 && !selectedFile) {
       // Try to find a main source file
-      const mainFile = files.find(f => 
-        f.includes('src/App.tsx') || 
-        f.includes('src/App.ts') || 
-        f.includes('src/main.tsx') ||
-        f.includes('src/index.tsx')
-      ) || files[0];
+      const mainFile =
+        files.find(
+          (f) =>
+            f.includes("src/App.tsx") ||
+            f.includes("src/App.ts") ||
+            f.includes("src/main.tsx") ||
+            f.includes("src/index.tsx")
+        ) || files[0];
       loadFileContent(mainFile);
     }
   }, [files.length]);
@@ -345,8 +362,8 @@ function CodeTab({ project }: { project: Project }) {
               <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 px-2 py-1 uppercase">
                 {dir}
               </div>
-              {dirFiles.map(file => {
-                const fileName = file.split('/').pop() || file;
+              {dirFiles.map((file) => {
+                const fileName = file.split("/").pop() || file;
                 const isSelected = selectedFile === file;
                 return (
                   <button
@@ -354,8 +371,8 @@ function CodeTab({ project }: { project: Project }) {
                     onClick={() => loadFileContent(file)}
                     className={`w-full text-left px-3 py-1.5 text-sm rounded transition-colors ${
                       isSelected
-                        ? 'bg-[#F48120]/10 text-[#F48120] font-medium'
-                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                        ? "bg-[#F48120]/10 text-[#F48120] font-medium"
+                        : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                     }`}
                   >
                     {fileName}
@@ -408,8 +425,8 @@ function SentryTab({ project }: { project: Project }) {
           <div className="text-4xl">🔧</div>
           <h3 className="font-semibold text-lg">Sentry Not Configured</h3>
           <p className="text-sm text-muted-foreground">
-            Provide a Sentry DSN in the chat to enable error tracking, performance monitoring, 
-            session replay, and logs for this project.
+            Provide a Sentry DSN in the chat to enable error tracking,
+            performance monitoring, session replay, and logs for this project.
           </p>
         </div>
       </div>
@@ -426,9 +443,10 @@ function SentryTab({ project }: { project: Project }) {
           </h3>
           <Card className="p-4 space-y-3">
             <p className="text-sm text-muted-foreground">
-              This project is integrated with Sentry for comprehensive monitoring.
+              This project is integrated with Sentry for comprehensive
+              monitoring.
             </p>
-            
+
             <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
               <h4 className="text-sm font-medium mb-2">Enabled Features:</h4>
               <ul className="space-y-2">
@@ -471,15 +489,21 @@ function SentryTab({ project }: { project: Project }) {
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
                 <span className="font-medium">🐛 Trigger Error:</span>
-                <span className="text-muted-foreground">Throws a test error to verify error tracking</span>
+                <span className="text-muted-foreground">
+                  Throws a test error to verify error tracking
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="font-medium">🐢 Slow API Call:</span>
-                <span className="text-muted-foreground">Simulates slow performance for monitoring</span>
+                <span className="text-muted-foreground">
+                  Simulates slow performance for monitoring
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="font-medium">💬 User Feedback:</span>
-                <span className="text-muted-foreground">Opens the Sentry feedback dialog</span>
+                <span className="text-muted-foreground">
+                  Opens the Sentry feedback dialog
+                </span>
               </li>
             </ul>
           </Card>
@@ -489,7 +513,8 @@ function SentryTab({ project }: { project: Project }) {
           <h3 className="font-semibold mb-2">View in Sentry</h3>
           <Card className="p-4">
             <p className="text-sm text-muted-foreground mb-3">
-              Check your Sentry dashboard to see captured events, performance data, and session replays.
+              Check your Sentry dashboard to see captured events, performance
+              data, and session replays.
             </p>
             <a
               href="https://sentry.io"
@@ -508,13 +533,13 @@ function SentryTab({ project }: { project: Project }) {
 }
 
 function LogsTab({ logs, projectId }: { logs: LogEntry[]; projectId: string }) {
-  const projectLogs = logs.filter(log => log.projectId === projectId);
+  const projectLogs = logs.filter((log) => log.projectId === projectId);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
     if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [projectLogs.length]);
 
@@ -533,9 +558,9 @@ function LogsTab({ logs, projectId }: { logs: LogEntry[]; projectId: string }) {
   }
 
   // Count log levels
-  const errorCount = projectLogs.filter(l => l.level === 'error').length;
-  const warnCount = projectLogs.filter(l => l.level === 'warn').length;
-  const successCount = projectLogs.filter(l => l.level === 'success').length;
+  const errorCount = projectLogs.filter((l) => l.level === "error").length;
+  const warnCount = projectLogs.filter((l) => l.level === "warn").length;
+  const successCount = projectLogs.filter((l) => l.level === "success").length;
 
   return (
     <div className="h-full flex flex-col bg-neutral-900">
@@ -543,7 +568,8 @@ function LogsTab({ logs, projectId }: { logs: LogEntry[]; projectId: string }) {
       <div className="px-4 py-2 border-b border-neutral-700 flex items-center justify-between bg-neutral-800">
         <div className="flex items-center gap-4 text-xs">
           <span className="text-neutral-400">
-            Total: <span className="text-white font-medium">{projectLogs.length}</span>
+            Total:{" "}
+            <span className="text-white font-medium">{projectLogs.length}</span>
           </span>
           {successCount > 0 && (
             <span className="text-green-400">
@@ -574,10 +600,13 @@ function LogsTab({ logs, projectId }: { logs: LogEntry[]; projectId: string }) {
             <div
               key={`${log.timestamp}-${index}`}
               className={`flex gap-3 ${
-                log.level === 'error' ? 'text-red-400' :
-                log.level === 'success' ? 'text-green-400' :
-                log.level === 'warn' ? 'text-yellow-400' :
-                'text-neutral-300'
+                log.level === "error"
+                  ? "text-red-400"
+                  : log.level === "success"
+                    ? "text-green-400"
+                    : log.level === "warn"
+                      ? "text-yellow-400"
+                      : "text-neutral-300"
               }`}
             >
               <span className="text-neutral-500 text-xs whitespace-nowrap">
@@ -596,13 +625,19 @@ function LogsTab({ logs, projectId }: { logs: LogEntry[]; projectId: string }) {
   );
 }
 
-function getStatusText(status?: Project['status']): string {
+function getStatusText(status?: Project["status"]): string {
   switch (status) {
-    case 'creating': return 'Creating project...';
-    case 'installing': return 'Installing dependencies...';
-    case 'starting': return 'Starting dev server...';
-    case 'ready': return 'Ready';
-    case 'error': return 'Error';
-    default: return 'Unknown';
+    case "creating":
+      return "Creating project...";
+    case "installing":
+      return "Installing dependencies...";
+    case "starting":
+      return "Starting dev server...";
+    case "ready":
+      return "Ready";
+    case "error":
+      return "Error";
+    default:
+      return "Unknown";
   }
 }

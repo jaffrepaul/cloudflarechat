@@ -23,13 +23,15 @@ An AI-powered application builder that creates full-stack web applications with 
 ### Installation
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Set up environment variables**
-   
+
    Create a `.dev.vars` file in the root:
+
    ```bash
    OPENAI_API_KEY=sk-...
    BUILD_SERVER_PORT=3001
@@ -37,10 +39,11 @@ An AI-powered application builder that creates full-stack web applications with 
    ```
 
 3. **Start the application**
+
    ```bash
    npm start
    ```
-   
+
    This starts two servers:
    - **Main app** (Vite): http://localhost:5173
    - **Build server**: http://localhost:3001
@@ -50,6 +53,7 @@ An AI-powered application builder that creates full-stack web applications with 
 1. **Open the app** at http://localhost:5173
 
 2. **Ask the AI to build an app**
+
    ```
    "Build me a todo app"
    ```
@@ -71,6 +75,7 @@ An AI-powered application builder that creates full-stack web applications with 
 ## 🎨 UI Features
 
 ### Split-Screen Layout
+
 - **Left Panel**: AI chat interface
 - **Right Panel**: Live app preview with tabs
 - **Resizable**: Drag the divider to adjust sizes
@@ -78,27 +83,32 @@ An AI-powered application builder that creates full-stack web applications with 
 ### OutputPanel Tabs
 
 #### 📱 Preview
+
 - Live iframe of your running app
 - Interact with the app directly
 - Open in new tab option
 
 #### 📝 Code
+
 - Project information
 - Feature list
 - Next steps guide
 
 #### 🐛 Sentry
+
 - Configuration status
 - Enabled features (Error tracking, Performance, Session Replay, Logs)
 - DSN information
 - Testing guide
 
 #### 📊 Logs
+
 - Real-time build logs
 - Color-coded by level (info, success, warn, error)
 - Timestamps for each entry
 
 ### Project Gallery
+
 - Click the folder icon to see all projects
 - Switch between projects
 - See project status at a glance
@@ -144,6 +154,7 @@ An AI-powered application builder that creates full-stack web applications with 
 Templates are located in `/build-server/templates/`
 
 Each template includes:
+
 - `package.json` with dependencies
 - Framework configuration files
 - Sentry integration file with placeholders
@@ -151,6 +162,7 @@ Each template includes:
 - Styling
 
 Placeholders are replaced during project creation:
+
 - `{{PROJECT_NAME}}`: The app name
 - `{{DESCRIPTION}}`: App description
 - `{{SENTRY_DSN}}`: Sentry configuration (empty until configured)
@@ -162,10 +174,11 @@ Placeholders are replaced during project creation:
 **User**: "Build me a todo app with Sentry monitoring"
 
 **AI Response**:
+
 ```
 That sounds great! I'll build a React todo app with Sentry monitoring for you.
 
-Before we begin, you'll need to create a Sentry project to enable error 
+Before we begin, you'll need to create a Sentry project to enable error
 tracking and performance monitoring.
 
 Please:
@@ -180,6 +193,7 @@ Once you provide the DSN, I'll build everything!
 **User**: [pastes Sentry DSN]
 
 **AI Response**:
+
 ```
 Perfect! Let me build your todo app now...
 
@@ -222,6 +236,7 @@ Once the app is running:
 Dev servers are allocated ports from 3000-3100 automatically. If you need to change this:
 
 Edit `build-server/project-manager.ts`:
+
 ```typescript
 const PORT_RANGE_START = 3000;
 const PORT_RANGE_END = 3100;
@@ -232,6 +247,7 @@ const PORT_RANGE_END = 3100;
 In development, the build server runs on `localhost:3001`. To change:
 
 1. Update `.env`:
+
    ```bash
    BUILD_SERVER_PORT=3002
    BUILD_SERVER_URL=http://localhost:3002
@@ -239,7 +255,8 @@ In development, the build server runs on `localhost:3001`. To change:
 
 2. Update `src/tools.ts`:
    ```typescript
-   const BUILD_SERVER_URL = process.env.BUILD_SERVER_URL || 'http://localhost:3002';
+   const BUILD_SERVER_URL =
+     process.env.BUILD_SERVER_URL || "http://localhost:3002";
    ```
 
 ## 📁 Project Structure
@@ -273,25 +290,30 @@ cloudflarechat/
 ## 🐛 Troubleshooting
 
 ### Build server won't start
+
 - Check port 3001 is available: `lsof -i :3001`
 - Check for errors in terminal output
 
 ### WebSocket connection fails
+
 - Verify build server is running
 - Check browser console for errors
 - Ensure no firewall blocking localhost:3001
 
 ### npm install fails in generated project
+
 - Check internet connection
 - Look at Logs tab for npm error output
 - Try manually: `cd projects/my-app-xxx && npm install`
 
 ### Preview shows blank page
+
 - Wait for "Starting development server..." to complete (~30s)
 - Check Logs tab for errors
 - Verify port is accessible: open `http://localhost:3000` directly
 
 ### AI doesn't use tools
+
 - Verify OPENAI_API_KEY is set correctly
 - Check browser console and server logs for errors
 - Try refreshing the page
@@ -307,12 +329,14 @@ cloudflarechat/
 ## 🎯 Future Enhancements
 
 ### Short-term
+
 - [ ] Vue, Svelte, Angular, Laravel templates
 - [ ] Project persistence (SQLite)
 - [ ] Stop/restart dev servers from UI
 - [ ] Delete projects from gallery
 
 ### Mid-term
+
 - [ ] Automatic Sentry project creation via API
 - [ ] Real-time Sentry event feed in UI
 - [ ] Custom project templates
@@ -320,6 +344,7 @@ cloudflarechat/
 - [ ] Multi-user support with auth
 
 ### Long-term
+
 - [ ] Deploy to Cloudflare Pages from UI
 - [ ] GitHub integration
 - [ ] Custom dependency installation

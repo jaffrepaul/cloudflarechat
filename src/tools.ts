@@ -10,7 +10,8 @@ import { getCurrentAgent } from "agents";
 import { scheduleSchema } from "agents/schedule";
 
 // Build server URL - direct connection to build server
-const BUILD_SERVER_URL = process.env.BUILD_SERVER_URL || 'http://localhost:3001';
+const BUILD_SERVER_URL =
+  process.env.BUILD_SERVER_URL || "http://localhost:3001";
 
 /**
  * Weather information tool that requires human confirmation
@@ -114,26 +115,37 @@ const cancelScheduledTask = tool({
  * Tool to create a new application project
  */
 const createApp = tool({
-  description: "Create a new application project with the specified framework and configuration",
+  description:
+    "Create a new application project with the specified framework and configuration",
   inputSchema: z.object({
     name: z.string().describe("The name of the application"),
-    framework: z.enum(['react', 'vue', 'svelte', 'angular', 'laravel']).describe("The framework to use"),
-    description: z.string().optional().describe("A brief description of what the app does")
+    framework: z
+      .enum(["react", "vue", "svelte", "angular", "laravel"])
+      .describe("The framework to use"),
+    description: z
+      .string()
+      .optional()
+      .describe("A brief description of what the app does")
   }),
   execute: async ({ name, framework, description }) => {
     try {
       const response = await fetch(`${BUILD_SERVER_URL}/api/project/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, framework, description })
       });
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || 'Failed to create project');
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error || "Failed to create project");
       }
 
-      const project = await response.json() as { id: string; name: string; framework: string; path: string };
+      const project = (await response.json()) as {
+        id: string;
+        name: string;
+        framework: string;
+        path: string;
+      };
       return {
         success: true,
         projectId: project.id,
@@ -143,10 +155,10 @@ const createApp = tool({
         message: `Project "${name}" created successfully with ${framework}`
       };
     } catch (error) {
-      console.error('Error creating app:', error);
+      console.error("Error creating app:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error"
       };
     }
   }
@@ -159,20 +171,22 @@ const writeProjectFile = tool({
   description: "Write a file to a project directory",
   inputSchema: z.object({
     projectId: z.string().describe("The ID of the project"),
-    filePath: z.string().describe("The relative path of the file within the project"),
+    filePath: z
+      .string()
+      .describe("The relative path of the file within the project"),
     content: z.string().describe("The content to write to the file")
   }),
   execute: async ({ projectId, filePath, content }) => {
     try {
       const response = await fetch(`${BUILD_SERVER_URL}/api/project/file`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId, filePath, content })
       });
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || 'Failed to write file');
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error || "Failed to write file");
       }
 
       return {
@@ -180,10 +194,10 @@ const writeProjectFile = tool({
         message: `File ${filePath} written successfully`
       };
     } catch (error) {
-      console.error('Error writing file:', error);
+      console.error("Error writing file:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error"
       };
     }
   }
@@ -196,31 +210,34 @@ const installDependencies = tool({
   description: "Install npm dependencies for a project",
   inputSchema: z.object({
     projectId: z.string().describe("The ID of the project"),
-    packageManager: z.enum(['npm', 'yarn', 'pnpm']).optional().describe("The package manager to use (defaults to npm)")
+    packageManager: z
+      .enum(["npm", "yarn", "pnpm"])
+      .optional()
+      .describe("The package manager to use (defaults to npm)")
   }),
-  execute: async ({ projectId, packageManager = 'npm' }) => {
+  execute: async ({ projectId, packageManager = "npm" }) => {
     try {
       const response = await fetch(`${BUILD_SERVER_URL}/api/project/install`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId, packageManager })
       });
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || 'Failed to install dependencies');
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error || "Failed to install dependencies");
       }
 
-      const result = await response.json() as { success: boolean };
+      const result = (await response.json()) as { success: boolean };
       return {
         success: result.success,
-        message: 'Dependencies installed successfully'
+        message: "Dependencies installed successfully"
       };
     } catch (error) {
-      console.error('Error installing dependencies:', error);
+      console.error("Error installing dependencies:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error"
       };
     }
   }
@@ -237,17 +254,17 @@ const startDevServer = tool({
   execute: async ({ projectId }) => {
     try {
       const response = await fetch(`${BUILD_SERVER_URL}/api/project/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId })
       });
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || 'Failed to start dev server');
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error || "Failed to start dev server");
       }
 
-      const result = await response.json() as { port: number; url: string };
+      const result = (await response.json()) as { port: number; url: string };
       return {
         success: true,
         port: result.port,
@@ -255,10 +272,10 @@ const startDevServer = tool({
         message: `Dev server started at ${result.url}`
       };
     } catch (error) {
-      console.error('Error starting dev server:', error);
+      console.error("Error starting dev server:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error"
       };
     }
   }
@@ -269,33 +286,38 @@ const startDevServer = tool({
  * This requires the user to provide a Sentry DSN
  */
 const configureSentry = tool({
-  description: "Configure Sentry monitoring for a project with the provided DSN",
+  description:
+    "Configure Sentry monitoring for a project with the provided DSN",
   inputSchema: z.object({
     projectId: z.string().describe("The ID of the project"),
     sentryDsn: z.string().describe("The Sentry DSN to use for this project")
   }),
   execute: async ({ projectId, sentryDsn }) => {
     try {
-      const response = await fetch(`${BUILD_SERVER_URL}/api/project/configure-sentry`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, sentryDsn })
-      });
+      const response = await fetch(
+        `${BUILD_SERVER_URL}/api/project/configure-sentry`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectId, sentryDsn })
+        }
+      );
 
       if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || 'Failed to configure Sentry');
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error || "Failed to configure Sentry");
       }
 
       return {
         success: true,
-        message: 'Sentry configured successfully with error tracking, performance monitoring, session replay, and logs'
+        message:
+          "Sentry configured successfully with error tracking, performance monitoring, session replay, and logs"
       };
     } catch (error) {
-      console.error('Error configuring Sentry:', error);
+      console.error("Error configuring Sentry:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error"
       };
     }
   }

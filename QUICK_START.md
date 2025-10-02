@@ -23,6 +23,7 @@ npm start
 ```
 
 You should see:
+
 ```
 🚀 Build server running on http://localhost:3001
 📡 WebSocket server ready
@@ -37,14 +38,16 @@ VITE v5.x.x ready in xxx ms
 1. **Open** http://localhost:5173 in your browser
 
 2. **Chat with the AI**:
+
    ```
    Build me a todo app
    ```
 
 3. **The AI will respond**:
+
    ```
    That sounds great! I'll build a React todo app with Sentry monitoring.
-   
+
    Before we begin, please:
    1. Go to https://sentry.io and create a new project
    2. Choose 'React' as the platform
@@ -88,6 +91,7 @@ In the preview panel (right side):
 ## 🎉 You're Done!
 
 Your app is running with full Sentry integration including:
+
 - ✅ Error tracking
 - ✅ Performance monitoring
 - ✅ Session replay
@@ -103,6 +107,7 @@ Your app is running with full Sentry integration including:
 ## 🐛 Troubleshooting
 
 **Build server won't start?**
+
 ```bash
 # Check if port 3001 is in use
 lsof -i :3001
@@ -111,14 +116,17 @@ kill -9 <PID>
 ```
 
 **WebSocket errors?**
+
 - Refresh the page
 - Check build server is running
 
 **npm install fails?**
+
 - Check internet connection
 - Look at the Logs tab for errors
 
 **Need help?**
+
 - Check `README_APP_BUILDER.md` for detailed docs
 - Check `IMPLEMENTATION_STATUS.md` for architecture details
 

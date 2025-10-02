@@ -9,6 +9,7 @@ npm start
 ```
 
 The app will start:
+
 - **Main UI**: http://localhost:3000
 - **Build Server**: http://localhost:3001 (internal)
 
@@ -36,29 +37,34 @@ lsof -ti:3000,3001,3002 | xargs kill -9
 ## Common Issues
 
 ### "WebSocket errors on page load"
+
 - **Cause**: Build server is still starting up
 - **Fix**: Wait 5-10 seconds, the WebSocket will auto-reconnect
 - **How to verify**: Check browser console for "✅ WebSocket connected successfully"
 
 ### "Process didn't exit in 5s. Force killing.."
+
 - **Cause**: Dev server processes aren't responding to SIGTERM
 - **Fix**: Press Ctrl+C again to force quit, then run `npm run cleanup`
 - **Prevention**: Use the updated `npm start` which includes `--kill-others` flag
 
 ### "Port already in use"
+
 - **Cause**: Previous processes didn't clean up
 - **Fix**: Run `npm run cleanup` before starting
 
 ### "Projects don't appear in UI"
+
 - **Cause**: Build server still loading or no projects created yet
-- **Fix**: 
+- **Fix**:
   1. Check http://localhost:3000/api/projects returns data
   2. If empty, ask the AI to create a project
   3. Projects are stored in `./projects/` directory
 
 ### "Preview iframe shows nothing"
+
 - **Cause**: Dev server for that project isn't running
-- **Fix**: 
+- **Fix**:
   1. Select the project in the UI
   2. The app will auto-start the dev server
   3. Check the Logs tab for startup progress
@@ -103,6 +109,7 @@ cloudflarechat/
 ## Next Steps
 
 Open http://localhost:3000 and try:
+
 - "Build me a React todo app with Sentry"
 - "Create a Vue.js calculator"
 - "Make a Svelte contact form"
