@@ -294,6 +294,7 @@ export default function Chat() {
             }}
             onDeleteProject={deleteProject}
             onDeleteAllProjects={deleteAllProjects}
+            onClearHistory={clearHistory}
             onToggle={() => setShowGallery(!showGallery)}
             isOpen={showGallery}
           />

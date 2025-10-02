@@ -59,8 +59,18 @@ export default defineConfig({
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
+  "include": ["src", "vite-env.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
+}`,
+
+  "vite-env.d.ts": `/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_SENTRY_DSN: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
 }`,
 
   "tsconfig.node.json": `{

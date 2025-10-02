@@ -16,6 +16,7 @@ interface ProjectGalleryProps {
   onSelectProject: (project: Project) => void;
   onDeleteProject?: (projectId: string) => void;
   onDeleteAllProjects?: () => void;
+  onClearHistory?: () => void;
   onToggle?: () => void;
   isOpen?: boolean;
 }
@@ -26,6 +27,7 @@ export function ProjectGallery({
   onSelectProject,
   onDeleteProject,
   onDeleteAllProjects,
+  onClearHistory,
   onToggle,
   isOpen = true
 }: ProjectGalleryProps) {
@@ -34,6 +36,10 @@ export function ProjectGallery({
   const handleDeleteAll = () => {
     if (onDeleteAllProjects) {
       onDeleteAllProjects();
+      // Also clear the chat history
+      if (onClearHistory) {
+        onClearHistory();
+      }
       setShowDeleteConfirm(false);
     }
   };
@@ -87,7 +93,7 @@ export function ProjectGallery({
 
               <p className="text-sm text-muted-foreground">
                 This action will permanently delete all projects, stop all dev
-                servers, and remove all files. This cannot be undone.
+                servers, remove all files, and clear the chat history. This cannot be undone.
               </p>
 
               <div className="flex gap-2 justify-end">

@@ -250,6 +250,77 @@ function TabButton({
 }
 
 function PreviewTab({ project }: { project: Project }) {
+  const [iframeKey, setIframeKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showIframe, setShowIframe] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const loadTimeoutRef = useRef<NodeJS.Timeout>();
+  const previousStatusRef = useRef<string | undefined>();
+
+  // Monitor project status and show iframe after delay when ready
+  useEffect(() => {
+    if (!project.devServerUrl || !project.status) return;
+
+    // Only trigger when status changes to "ready"
+    if (project.status === "ready" && previousStatusRef.current !== "ready") {
+      console.log("Status changed to ready, starting load delay...");
+      setIsLoading(true);
+      setShowIframe(false);
+      
+      // Clear any existing timeout
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
+      
+      // Wait 3 seconds for dev server to be fully ready, then show iframe
+      loadTimeoutRef.current = setTimeout(() => {
+        console.log("Load delay complete, showing iframe");
+        setShowIframe(true);
+        setIsLoading(false);
+      }, 3000);
+    }
+
+    previousStatusRef.current = project.status;
+
+    return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
+    };
+  }, [project.status, project.devServerUrl]);
+
+  // Reset state when URL changes
+  useEffect(() => {
+    console.log("DevServerUrl changed:", project.devServerUrl);
+    setIsLoading(false);
+    setShowIframe(false);
+    previousStatusRef.current = undefined;
+    
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+    }
+  }, [project.devServerUrl]);
+
+  const handleRefresh = () => {
+    console.log("Manual refresh triggered");
+    // Clear existing timeout
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+    }
+
+    // Reset state and reload iframe
+    setShowIframe(false);
+    setIsLoading(true);
+    setIframeKey((prev) => prev + 1);
+    
+    // Wait then show iframe again
+    loadTimeoutRef.current = setTimeout(() => {
+      console.log("Refresh delay complete, showing iframe");
+      setShowIframe(true);
+      setIsLoading(false);
+    }, 2000);
+  };
+
   if (!project.devServerUrl) {
     return (
       <div className="h-full flex items-center justify-center p-8">
@@ -264,15 +335,82 @@ function PreviewTab({ project }: { project: Project }) {
     );
   }
 
+  console.log("PreviewTab render - isLoading:", isLoading, "showIframe:", showIframe, "status:", project.status);
+
   return (
-    <div className="h-full w-full bg-white dark:bg-neutral-950">
-      <iframe
-        src={project.devServerUrl}
-        className="w-full h-full border-0"
-        title={`Preview: ${project.name}`}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox"
-        allow="cross-origin-isolated"
-      />
+    <div className="h-full w-full bg-white dark:bg-neutral-950 relative">
+      {/* Loading overlay - show while waiting */}
+      {isLoading && !showIframe && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-950 z-30">
+          <div className="text-center space-y-4">
+            <div className="w-12 h-12 border-4 border-[#F48120] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Loading preview...</h3>
+              <p className="text-xs text-muted-foreground mt-2">
+                Waiting for dev server to respond...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Waiting state - show when not loading but also not showing iframe */}
+      {!isLoading && !showIframe && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-950 z-30">
+          <div className="text-center space-y-4 p-8">
+            <div className="text-4xl">🚀</div>
+            <h3 className="font-semibold text-lg">Ready to preview</h3>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Dev server is ready. Click below to load the preview.
+            </p>
+            <button
+              onClick={handleRefresh}
+              className="mt-4 px-4 py-2 bg-[#F48120] text-white rounded-md hover:bg-[#F48120]/90 transition-colors"
+            >
+              Load Preview
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Refresh button overlay - only show when iframe is visible */}
+      {showIframe && (
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-md shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors text-sm"
+            title="Refresh preview"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      )}
+      
+      {/* Only render iframe once triggered */}
+      {showIframe && (
+        <iframe
+          key={iframeKey}
+          ref={iframeRef}
+          src={project.devServerUrl}
+          className="w-full h-full border-0"
+          title={`Preview: ${project.name}`}
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox"
+          allow="cross-origin-isolated"
+        />
+      )}
     </div>
   );
 }
