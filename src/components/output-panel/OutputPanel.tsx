@@ -61,7 +61,7 @@ export function OutputPanel({
 
   if (!project) {
     return (
-      <div className="h-full w-full flex flex-col bg-neutral-50 dark:bg-neutral-950 border-l border-neutral-300 dark:border-neutral-800">
+      <div className="h-full w-full flex flex-col bg-neutral-50 dark:bg-[#1a1626] border-l border-neutral-300 dark:border-[#9A5CF5]/20">
         {/* Main content */}
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-4 p-8">
@@ -76,8 +76,8 @@ export function OutputPanel({
         </div>
 
         {/* Dev server logs section - always visible */}
-        <div className="h-64 border-t border-neutral-300 dark:border-neutral-800 bg-neutral-900 overflow-hidden flex flex-col">
-          <div className="px-4 py-2 border-b border-neutral-700 flex items-center justify-between">
+        <div className="h-64 border-t border-neutral-300 dark:border-[#9A5CF5]/20 bg-[#241b2f] overflow-hidden flex flex-col">
+          <div className="px-4 py-2 border-b border-[#9A5CF5]/20 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-neutral-300">
                 Build Logs
@@ -147,7 +147,7 @@ export function OutputPanel({
   return (
     <div className="h-full w-full flex flex-col bg-neutral-50 dark:bg-neutral-950 border-l border-neutral-300 dark:border-neutral-800">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+      <div className="px-4 py-3 border-b border-neutral-300 dark:border-[#9A5CF5]/20 bg-white dark:bg-[#241b2f]">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-semibold text-base">{project.name}</h2>
@@ -170,7 +170,7 @@ export function OutputPanel({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+      <div className="flex border-b border-neutral-300 dark:border-[#9A5CF5]/20 bg-white dark:bg-[#241b2f]">
         <TabButton
           icon={<Monitor size={16} />}
           label="Preview"
@@ -234,7 +234,7 @@ function TabButton({
         flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors relative
         ${
           active
-            ? "border-[#F48120] text-[#F48120]"
+            ? "border-[#9A5CF5] text-[#9A5CF5]"
             : "border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
         }
         ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
@@ -243,7 +243,7 @@ function TabButton({
       {icon}
       {label}
       {badge && (
-        <span className="w-2 h-2 bg-[#F48120] rounded-full absolute top-1 right-1" />
+        <span className="w-2 h-2 bg-[#9A5CF5] rounded-full absolute top-1 right-1" />
       )}
     </button>
   );
@@ -300,12 +300,12 @@ function PreviewTab({ project }: { project: Project }) {
   }
 
   return (
-    <div className="h-full w-full bg-white dark:bg-neutral-950 relative">
+    <div className="h-full w-full bg-white dark:bg-[#1a1626] relative">
       {/* Loading state - show while waiting for iframe to be ready */}
       {!showIframe && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-950 z-30">
+        <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-[#1a1626] z-30">
           <div className="text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-[#F48120] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="w-12 h-12 border-4 border-[#9A5CF5] border-t-transparent rounded-full animate-spin mx-auto" />
             <div>
               <h3 className="font-semibold text-lg mb-2">Loading preview...</h3>
               <p className="text-xs text-muted-foreground mt-2">
@@ -321,7 +321,7 @@ function PreviewTab({ project }: { project: Project }) {
         <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-md shadow-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#2d2438] border border-neutral-300 dark:border-[#9A5CF5]/30 rounded-md shadow-sm hover:bg-neutral-50 dark:hover:bg-[#362d41] transition-colors text-sm"
             title="Refresh preview"
           >
             <svg
@@ -431,8 +431,8 @@ function CodeTab({ project }: { project: Project }) {
   return (
     <div className="h-full flex">
       {/* File Browser */}
-      <div className="w-64 border-r border-neutral-300 dark:border-neutral-800 overflow-y-auto bg-white dark:bg-neutral-900">
-        <div className="p-3 border-b border-neutral-300 dark:border-neutral-800">
+      <div className="w-64 border-r border-neutral-300 dark:border-[#9A5CF5]/20 overflow-y-auto bg-white dark:bg-[#241b2f]">
+        <div className="p-3 border-b border-neutral-300 dark:border-[#9A5CF5]/20">
           <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
             Files ({files.length})
           </h3>
@@ -452,8 +452,8 @@ function CodeTab({ project }: { project: Project }) {
                     onClick={() => loadFileContent(file)}
                     className={`w-full text-left px-3 py-1.5 text-sm rounded transition-colors ${
                       isSelected
-                        ? "bg-[#F48120]/10 text-[#F48120] font-medium"
-                        : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        ? "bg-[#9A5CF5]/10 text-[#9A5CF5] font-medium"
+                        : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-[#2d2438]"
                     }`}
                   >
                     {fileName}
@@ -469,7 +469,7 @@ function CodeTab({ project }: { project: Project }) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {selectedFile ? (
           <>
-            <div className="px-4 py-2 border-b border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-between">
+            <div className="px-4 py-2 border-b border-neutral-300 dark:border-[#9A5CF5]/20 bg-neutral-50 dark:bg-[#241b2f] flex items-center justify-between">
               <span className="text-sm font-mono text-neutral-700 dark:text-neutral-300">
                 {selectedFile}
               </span>
@@ -477,7 +477,7 @@ function CodeTab({ project }: { project: Project }) {
                 <span className="text-xs text-neutral-500">Loading...</span>
               )}
             </div>
-            <div className="flex-1 overflow-auto bg-neutral-50 dark:bg-neutral-950">
+            <div className="flex-1 overflow-auto bg-neutral-50 dark:bg-[#1a1626]">
               <pre className="p-4 text-sm font-mono text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap break-words">
                 {fileContent}
               </pre>
@@ -528,7 +528,7 @@ function SentryTab({ project }: { project: Project }) {
               monitoring.
             </p>
 
-            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
+            <div className="pt-2 border-t border-neutral-200 dark:border-[#9A5CF5]/20">
               <h4 className="text-sm font-medium mb-2">Enabled Features:</h4>
               <ul className="space-y-2">
                 <li className="flex items-center gap-2 text-sm">
@@ -551,9 +551,9 @@ function SentryTab({ project }: { project: Project }) {
             </div>
 
             {project.sentryDsn && (
-              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800">
+              <div className="pt-2 border-t border-neutral-200 dark:border-[#9A5CF5]/20">
                 <h4 className="text-sm font-medium mb-2">DSN:</h4>
-                <code className="text-xs bg-neutral-100 dark:bg-neutral-800 p-2 rounded block break-all">
+                <code className="text-xs bg-neutral-100 dark:bg-[#2d2438] p-2 rounded block break-all">
                   {project.sentryDsn}
                 </code>
               </div>
@@ -601,7 +601,7 @@ function SentryTab({ project }: { project: Project }) {
               href="https://sentry.io"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-[#F48120] hover:underline"
+              className="inline-flex items-center gap-2 text-sm text-[#9A5CF5] hover:underline"
             >
               <LinkIcon size={16} />
               Open Sentry Dashboard
@@ -644,9 +644,9 @@ function LogsTab({ logs, projectId }: { logs: LogEntry[]; projectId: string }) {
   const successCount = projectLogs.filter((l) => l.level === "success").length;
 
   return (
-    <div className="h-full flex flex-col bg-neutral-900">
+    <div className="h-full flex flex-col bg-[#241b2f]">
       {/* Log Stats Header */}
-      <div className="px-4 py-2 border-b border-neutral-700 flex items-center justify-between bg-neutral-800">
+      <div className="px-4 py-2 border-b border-[#9A5CF5]/20 flex items-center justify-between bg-[#2d2438]">
         <div className="flex items-center gap-4 text-xs">
           <span className="text-neutral-400">
             Total:{" "}

@@ -14,7 +14,9 @@ export const reactTemplate = {
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "@sentry/react": "^8.0.0"
+    "@sentry/react": "^8.0.0",
+    "ai": "^4.0.0",
+    "@ai-sdk/openai": "^1.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
@@ -67,6 +69,7 @@ export default defineConfig({
 
 interface ImportMetaEnv {
   readonly VITE_SENTRY_DSN: string
+  readonly VITE_OPENAI_API_KEY: string
 }
 
 interface ImportMeta {
@@ -102,6 +105,10 @@ interface ImportMeta {
   ".env.example": `# Sentry Configuration
 # Get your DSN from https://sentry.io
 VITE_SENTRY_DSN=your-sentry-dsn-here
+
+# OpenAI Configuration (for AI Agent demo)
+# Get your API key from https://platform.openai.com
+VITE_OPENAI_API_KEY=your-openai-api-key-here
 `,
 
   ".gitignore": `# Logs
@@ -159,6 +166,59 @@ if (sentryDsn) {
 }
 
 export default Sentry;`,
+
+  "src/aiAgent.ts": `import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import * as Sentry from '@sentry/react';
+
+// AI Agent function with Sentry monitoring
+export async function aiAgent(userQuery: string) {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured. Set VITE_OPENAI_API_KEY in .env file.');
+  }
+
+  // Start a Sentry span to monitor the AI agent call
+  return await Sentry.startSpan(
+    {
+      name: 'ai.agent.call',
+      op: 'ai.agent',
+      attributes: {
+        'ai.agent.function_id': 'ai-agent-main',
+        'ai.agent.model': 'gpt-4o',
+        'ai.agent.input': userQuery,
+      },
+    },
+    async (span) => {
+      try {
+        const result = await generateText({
+          model: openai('gpt-4o', { apiKey }),
+          prompt: userQuery,
+          experimental_telemetry: {
+            isEnabled: true,
+            functionId: 'ai-agent-main',
+            recordInputs: true,
+            recordOutputs: true,
+          },
+        });
+
+        // Record the output in Sentry
+        span?.setAttributes({
+          'ai.agent.output': result.text.substring(0, 200), // Limit to 200 chars
+          'ai.agent.tokens.total': result.usage?.totalTokens || 0,
+        });
+
+        return result.text;
+      } catch (error) {
+        // Capture errors in Sentry
+        span?.setStatus({ code: 2, message: 'Error' });
+        Sentry.captureException(error);
+        throw error;
+      }
+    }
+  );
+}`,
 
   "src/main.tsx": `import React from 'react'
 import ReactDOM from 'react-dom/client'
@@ -253,7 +313,7 @@ function App() {
 
           <div className="sentry-info">
             <p>
-              <strong>Note:</strong> Make sure to configure your Sentry DSN in <code>src/sentry.ts</code>
+              <strong>Note:</strong> Configure your Sentry DSN in <code>.env</code> to enable monitoring
             </p>
           </div>
         </div>

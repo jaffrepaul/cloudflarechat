@@ -277,15 +277,15 @@ export default function Chat() {
   return (
     <div
       ref={containerRef}
-      className="h-[100vh] w-full flex overflow-hidden bg-neutral-50 dark:bg-neutral-950"
+      className="h-[100vh] w-full flex overflow-hidden bg-neutral-50 dark:bg-[#1a1626]"
     >
       <HasOpenAIKey />
 
       {/* Project Gallery Sidebar - Fixed width on left */}
       <div
-        className={`h-full flex-shrink-0 transition-all duration-300 lg:block hidden ${showGallery ? "w-80" : "w-0"} overflow-hidden border-r border-neutral-300 dark:border-neutral-800`}
+        className={`h-full flex-shrink-0 transition-all duration-300 lg:block hidden ${showGallery ? "w-80" : "w-0"} overflow-hidden border-r border-neutral-300 dark:border-[#9A5CF5]/20`}
       >
-        <div className="h-full w-80 bg-white dark:bg-neutral-900">
+        <div className="h-full w-80 bg-white dark:bg-[#241b2f]">
           <ProjectGallery
             projects={projects}
             activeProject={activeProject}
@@ -307,8 +307,8 @@ export default function Chat() {
         style={{ width: `${leftPanelWidth}%` }}
       >
         <div className="h-full w-full px-0 py-1 flex justify-center items-center">
-          <div className="h-[calc(100vh-0.5rem)] w-full mx-auto max-w-5xl flex flex-col shadow-xl rounded-md overflow-hidden relative border border-neutral-300 dark:border-neutral-800">
-            <div className="px-4 py-3 border-b border-neutral-300 dark:border-neutral-800 flex items-center gap-3 sticky top-0 z-10">
+          <div className="h-[calc(100vh-0.5rem)] w-full mx-auto max-w-5xl flex flex-col shadow-xl rounded-md overflow-hidden relative border border-neutral-300 dark:border-[#9A5CF5]/30">
+            <div className="px-4 py-3 border-b border-neutral-300 dark:border-[#9A5CF5]/20 flex items-center gap-3 sticky top-0 z-10">
               {/* Toggle button when gallery is closed */}
               {!showGallery && (
                 <button
@@ -376,7 +376,7 @@ export default function Chat() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 max-h-[calc(100vh-10rem)]">
               {agentMessages.length === 0 && (
                 <div className="h-full flex items-center justify-center">
-                  <Card className="p-6 max-w-md mx-auto bg-neutral-100 dark:bg-neutral-900">
+                  <Card className="p-6 max-w-md mx-auto bg-neutral-100 dark:bg-[#2d2438]">
                     <div className="text-center space-y-4">
                       <div className="bg-[#362d59]/10 dark:bg-white/10 rounded-full p-3 inline-flex">
                         <svg
@@ -439,7 +439,7 @@ export default function Chat() {
                                   // biome-ignore lint/suspicious/noArrayIndexKey: immutable index
                                   <div key={i}>
                                     <Card
-                                      className={`p-3 rounded-md bg-neutral-100 dark:bg-neutral-900 ${
+                                      className={`p-3 rounded-md bg-neutral-100 dark:bg-[#2d2438] ${
                                         isUser
                                           ? "rounded-br-none"
                                           : "rounded-bl-none border-assistant-border"
@@ -539,7 +539,7 @@ export default function Chat() {
                 });
                 setTextareaHeight("auto"); // Reset height after submission
               }}
-              className="p-3 bg-neutral-50 absolute bottom-0 left-0 right-0 z-10 border-t border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900"
+              className="p-3 bg-neutral-50 absolute bottom-0 left-0 right-0 z-10 border-t border-neutral-300 dark:border-[#9A5CF5]/20 dark:bg-[#241b2f]"
             >
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
@@ -550,7 +550,7 @@ export default function Chat() {
                         ? "Please respond to the tool confirmation above..."
                         : "Send a message..."
                     }
-                    className="flex w-full border border-neutral-200 dark:border-neutral-700 px-3 py-2  ring-offset-background placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:focus-visible:ring-neutral-700 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-10 dark:bg-neutral-900"
+                    className="flex w-full border border-neutral-200 dark:border-[#9A5CF5]/30 px-3 py-2  ring-offset-background placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:focus-visible:ring-[#9A5CF5] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1a1626] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-10 dark:bg-[#2d2438]"
                     value={agentInput}
                     onChange={(e) => {
                       handleAgentInputChange(e);
@@ -605,7 +605,7 @@ export default function Chat() {
 
       {/* Resizer */}
       <div
-        className="w-1 bg-neutral-300 dark:bg-neutral-800 hover:bg-[#F48120] dark:hover:bg-[#F48120] cursor-col-resize transition-colors lg:block hidden"
+        className="w-1 bg-neutral-300 dark:bg-[#9A5CF5]/20 hover:bg-[#9A5CF5] dark:hover:bg-[#9A5CF5] cursor-col-resize transition-colors lg:block hidden"
         onMouseDown={() => setIsResizing(true)}
       />
 
@@ -622,8 +622,8 @@ export default function Chat() {
       <div className="lg:hidden w-full h-full flex flex-col">
         <div className="flex-1 overflow-hidden">
           <div className="h-full w-full px-0 py-1 flex justify-center items-center">
-            <div className="h-[calc(100%-0.5rem)] w-full mx-auto max-w-3xl flex flex-col shadow-xl rounded-md overflow-hidden relative border border-neutral-300 dark:border-neutral-800">
-              <div className="px-4 py-3 border-b border-neutral-300 dark:border-neutral-800 flex items-center gap-3 sticky top-0 z-10">
+            <div className="h-[calc(100%-0.5rem)] w-full mx-auto max-w-3xl flex flex-col shadow-xl rounded-md overflow-hidden relative border border-neutral-300 dark:border-[#9A5CF5]/30">
+              <div className="px-4 py-3 border-b border-neutral-300 dark:border-[#9A5CF5]/20 flex items-center gap-3 sticky top-0 z-10">
                 <div className="flex items-center justify-center h-8 w-8">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -679,7 +679,7 @@ export default function Chat() {
               <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 max-h-[calc(100%-10rem)]">
                 {agentMessages.length === 0 && (
                   <div className="h-full flex items-center justify-center">
-                    <Card className="p-6 max-w-md mx-auto bg-neutral-100 dark:bg-neutral-900">
+                    <Card className="p-6 max-w-md mx-auto bg-neutral-100 dark:bg-[#2d2438]">
                       <div className="text-center space-y-4">
                         <div className="bg-[#362d59]/10 dark:bg-white/10 rounded-full p-3 inline-flex">
                           <svg
@@ -742,7 +742,7 @@ export default function Chat() {
                                     // biome-ignore lint/suspicious/noArrayIndexKey: immutable index
                                     <div key={i}>
                                       <Card
-                                        className={`p-3 rounded-md bg-neutral-100 dark:bg-neutral-900 ${
+                                        className={`p-3 rounded-md bg-neutral-100 dark:bg-[#2d2438] ${
                                           isUser
                                             ? "rounded-br-none"
                                             : "rounded-bl-none border-assistant-border"
@@ -842,7 +842,7 @@ export default function Chat() {
                   });
                   setTextareaHeight("auto"); // Reset height after submission
                 }}
-                className="p-3 bg-neutral-50 absolute bottom-0 left-0 right-0 z-10 border-t border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900"
+                className="p-3 bg-neutral-50 absolute bottom-0 left-0 right-0 z-10 border-t border-neutral-300 dark:border-[#9A5CF5]/20 dark:bg-[#241b2f]"
               >
                 <div className="flex items-center gap-2">
                   <div className="flex-1 relative">
@@ -853,7 +853,7 @@ export default function Chat() {
                           ? "Please respond to the tool confirmation above..."
                           : "Send a message..."
                       }
-                      className="flex w-full border border-neutral-200 dark:border-neutral-700 px-3 py-2  ring-offset-background placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:focus-visible:ring-neutral-700 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-10 dark:bg-neutral-900"
+                      className="flex w-full border border-neutral-200 dark:border-[#9A5CF5]/30 px-3 py-2  ring-offset-background placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:focus-visible:ring-[#9A5CF5] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1a1626] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-10 dark:bg-[#2d2438]"
                       value={agentInput}
                       onChange={(e) => {
                         handleAgentInputChange(e);
@@ -921,7 +921,7 @@ function HasOpenAIKey() {
     return (
       <div className="fixed top-0 left-0 right-0 z-50 bg-red-500/10 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto p-4">
-          <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-red-200 dark:border-red-900 p-4">
+          <div className="bg-white dark:bg-[#2d2438] rounded-lg shadow-lg border border-red-200 dark:border-red-900 p-4">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
                 <svg

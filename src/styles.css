@@ -48,6 +48,16 @@
   --color-black: #000;
   --color-white: #fff;
 
+  /* Sentry brand colors */
+  --color-sentry-purple: #9A5CF5;
+  --color-sentry-pink: #E96B8E;
+  --color-sentry-dark-purple: #6A28C9;
+  --color-sentry-light-purple: #C298FF;
+
+  /* Tailwind primary color (used by bg-primary, text-primary-foreground) */
+  --color-primary: var(--color-sentry-purple);
+  --color-primary-foreground: #fff;
+
   --color-neutral-50: oklch(0.985 0 0);
   --color-neutral-100: oklch(0.97 0 0);
   --color-neutral-150: oklch(0.96 0 0) /*new */;
@@ -75,11 +85,11 @@
   /* Component colors */
 
   /* Base colors */
-  --color-ob-base-100: var(--color-white);
-  --color-ob-base-200: var(--color-neutral-50);
-  --color-ob-base-300: var(--color-neutral-100);
-  --color-ob-base-400: var(--color-neutral-200);
-  --color-ob-base-500: var(--color-neutral-300);
+  --color-ob-base-100: #f8f7fa;
+  --color-ob-base-200: #f0eef5;
+  --color-ob-base-300: #e8e5f0;
+  --color-ob-base-400: #ddd9e8;
+  --color-ob-base-500: #c9c4d8;
   --color-ob-base-1000: var(--color-neutral-900);
 
   --color-ob-border: var(--color-neutral-200);
@@ -93,10 +103,10 @@
   --text-color-ob-inverted: var(--color-white);
 
   /* ob-btn */
-  --color-ob-btn-primary-bg: var(--color-neutral-750);
-  --color-ob-btn-primary-bg-hover: var(--color-neutral-850);
-  --color-ob-btn-primary-border: var(--color-neutral-500);
-  --color-ob-btn-primary-border-hover: var(--color-neutral-600);
+  --color-ob-btn-primary-bg: var(--color-sentry-purple);
+  --color-ob-btn-primary-bg-hover: var(--color-sentry-dark-purple);
+  --color-ob-btn-primary-border: var(--color-sentry-purple);
+  --color-ob-btn-primary-border-hover: var(--color-sentry-dark-purple);
 
   --color-ob-btn-secondary-bg: var(--color-white);
   --color-ob-btn-secondary-bg-hover: var(--color-neutral-50);
@@ -111,22 +121,22 @@
   --color-ob-btn-destructive-border-hover: var(--color-red-500);
 
   /* Focus colors */
-  --color-ob-focus: var(--color-blue-400);
+  --color-ob-focus: var(--color-sentry-purple);
 }
 
 .dark {
   /* Component colors */
 
-  /* Base colors */
-  --color-ob-base-100: var(--color-neutral-950);
-  --color-ob-base-200: var(--color-neutral-900);
-  --color-ob-base-300: var(--color-neutral-850);
-  --color-ob-base-400: var(--color-neutral-800);
-  --color-ob-base-500: var(--color-neutral-750);
+  /* Base colors - Sentry dark purple theme */
+  --color-ob-base-100: #1a1626;
+  --color-ob-base-200: #241b2f;
+  --color-ob-base-300: #2d2438;
+  --color-ob-base-400: #362d41;
+  --color-ob-base-500: #403549;
   --color-ob-base-1000: var(--color-neutral-50);
 
-  --color-ob-border: var(--color-neutral-800);
-  --color-ob-border-active: var(--color-neutral-700);
+  --color-ob-border: rgba(154, 92, 245, 0.2);
+  --color-ob-border-active: rgba(154, 92, 245, 0.4);
 
   /* Text colors */
   --text-color-ob-base-100: var(--color-neutral-500);
@@ -136,17 +146,17 @@
   --text-color-ob-inverted: var(--color-neutral-900);
 
   /* ob-btn */
-  --color-ob-btn-primary-bg: var(--color-neutral-300);
-  --color-ob-btn-primary-bg-hover: var(--color-neutral-250);
-  --color-ob-btn-primary-border: var(--color-neutral-100);
-  --color-ob-btn-primary-border-hover: var(--color-white);
+  --color-ob-btn-primary-bg: var(--color-sentry-purple);
+  --color-ob-btn-primary-bg-hover: var(--color-sentry-light-purple);
+  --color-ob-btn-primary-border: var(--color-sentry-purple);
+  --color-ob-btn-primary-border-hover: var(--color-sentry-light-purple);
 
-  --color-ob-btn-secondary-bg: var(--color-neutral-900);
-  --color-ob-btn-secondary-bg-hover: var(--color-neutral-850);
-  --color-ob-btn-secondary-border: var(--color-neutral-800);
-  --color-ob-btn-secondary-border-hover: var(--color-neutral-750);
+  --color-ob-btn-secondary-bg: rgba(154, 92, 245, 0.1);
+  --color-ob-btn-secondary-bg-hover: rgba(154, 92, 245, 0.15);
+  --color-ob-btn-secondary-border: rgba(154, 92, 245, 0.2);
+  --color-ob-btn-secondary-border-hover: rgba(154, 92, 245, 0.3);
 
-  --color-ob-btn-ghost-bg-hover: var(--color-neutral-850);
+  --color-ob-btn-ghost-bg-hover: rgba(154, 92, 245, 0.1);
 
   --color-ob-btn-destructive-bg: var(--color-red-800);
   --color-ob-btn-destructive-bg-hover: var(--color-red-750);
@@ -154,7 +164,7 @@
   --color-ob-btn-destructive-border-hover: var(--color-red-600);
 
   /* Focus colors */
-  --color-ob-focus: var(--color-blue-800);
+  --color-ob-focus: var(--color-sentry-light-purple);
 }
 
 .btn {
