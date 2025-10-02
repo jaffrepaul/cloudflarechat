@@ -269,20 +269,26 @@ export function useProjectManager() {
     }
   }, [activeProject]);
 
-  // Poll for project updates
+  // Poll for project updates - but stop polling once project is ready or errored
   useEffect(() => {
+    if (!activeProject) return;
+
+    // If project is in a stable state (ready or error), don't poll
+    if (activeProject.status === "ready" || activeProject.status === "error") {
+      return;
+    }
+
+    // Only poll if project is still in progress
     const interval = setInterval(() => {
-      if (activeProject) {
-        getProjectStatus(activeProject.id).then((status) => {
-          if (status) {
-            setActiveProject(status);
-          } else {
-            // Project no longer exists on backend, clear it from state
-            setActiveProject(undefined);
-            safeSessionStorage.setItem("activeProject", "");
-          }
-        });
-      }
+      getProjectStatus(activeProject.id).then((status) => {
+        if (status) {
+          setActiveProject(status);
+        } else {
+          // Project no longer exists on backend, clear it from state
+          setActiveProject(undefined);
+          safeSessionStorage.setItem("activeProject", "");
+        }
+      });
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(interval);

@@ -251,74 +251,38 @@ function TabButton({
 
 function PreviewTab({ project }: { project: Project }) {
   const [iframeKey, setIframeKey] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
   const [showIframe, setShowIframe] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const loadTimeoutRef = useRef<NodeJS.Timeout>();
-  const previousStatusRef = useRef<string | undefined>();
+  const hasInitializedRef = useRef(false);
 
-  // Monitor project status and show iframe after delay when ready
+  // Show iframe immediately when we have a devServerUrl and status is ready
   useEffect(() => {
-    if (!project.devServerUrl || !project.status) return;
-
-    // Only trigger when status changes to "ready"
-    if (project.status === "ready" && previousStatusRef.current !== "ready") {
-      console.log("Status changed to ready, starting load delay...");
-      setIsLoading(true);
+    if (!project.devServerUrl || !project.status) {
+      hasInitializedRef.current = false;
       setShowIframe(false);
-      
-      // Clear any existing timeout
-      if (loadTimeoutRef.current) {
-        clearTimeout(loadTimeoutRef.current);
-      }
-      
-      // Wait 3 seconds for dev server to be fully ready, then show iframe
-      loadTimeoutRef.current = setTimeout(() => {
-        console.log("Load delay complete, showing iframe");
+      return;
+    }
+
+    // Only initialize once when status becomes ready
+    if (project.status === "ready" && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      // Small delay to ensure dev server is ready
+      const timer = setTimeout(() => {
         setShowIframe(true);
-        setIsLoading(false);
-      }, 3000);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
     }
+  }, [project.devServerUrl, project.status]);
 
-    previousStatusRef.current = project.status;
-
-    return () => {
-      if (loadTimeoutRef.current) {
-        clearTimeout(loadTimeoutRef.current);
-      }
-    };
-  }, [project.status, project.devServerUrl]);
-
-  // Reset state when URL changes
+  // Reset when URL changes
   useEffect(() => {
-    console.log("DevServerUrl changed:", project.devServerUrl);
-    setIsLoading(false);
+    hasInitializedRef.current = false;
     setShowIframe(false);
-    previousStatusRef.current = undefined;
-    
-    if (loadTimeoutRef.current) {
-      clearTimeout(loadTimeoutRef.current);
-    }
   }, [project.devServerUrl]);
 
   const handleRefresh = () => {
-    console.log("Manual refresh triggered");
-    // Clear existing timeout
-    if (loadTimeoutRef.current) {
-      clearTimeout(loadTimeoutRef.current);
-    }
-
-    // Reset state and reload iframe
-    setShowIframe(false);
-    setIsLoading(true);
     setIframeKey((prev) => prev + 1);
-    
-    // Wait then show iframe again
-    loadTimeoutRef.current = setTimeout(() => {
-      console.log("Refresh delay complete, showing iframe");
-      setShowIframe(true);
-      setIsLoading(false);
-    }, 2000);
   };
 
   if (!project.devServerUrl) {
@@ -335,40 +299,19 @@ function PreviewTab({ project }: { project: Project }) {
     );
   }
 
-  console.log("PreviewTab render - isLoading:", isLoading, "showIframe:", showIframe, "status:", project.status);
-
   return (
     <div className="h-full w-full bg-white dark:bg-neutral-950 relative">
-      {/* Loading overlay - show while waiting */}
-      {isLoading && !showIframe && (
+      {/* Loading state - show while waiting for iframe to be ready */}
+      {!showIframe && (
         <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-950 z-30">
           <div className="text-center space-y-4">
             <div className="w-12 h-12 border-4 border-[#F48120] border-t-transparent rounded-full animate-spin mx-auto" />
             <div>
               <h3 className="font-semibold text-lg mb-2">Loading preview...</h3>
               <p className="text-xs text-muted-foreground mt-2">
-                Waiting for dev server to respond...
+                Preparing dev server...
               </p>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Waiting state - show when not loading but also not showing iframe */}
-      {!isLoading && !showIframe && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-950 z-30">
-          <div className="text-center space-y-4 p-8">
-            <div className="text-4xl">🚀</div>
-            <h3 className="font-semibold text-lg">Ready to preview</h3>
-            <p className="text-sm text-muted-foreground max-w-md">
-              Dev server is ready. Click below to load the preview.
-            </p>
-            <button
-              onClick={handleRefresh}
-              className="mt-4 px-4 py-2 bg-[#F48120] text-white rounded-md hover:bg-[#F48120]/90 transition-colors"
-            >
-              Load Preview
-            </button>
           </div>
         </div>
       )}
