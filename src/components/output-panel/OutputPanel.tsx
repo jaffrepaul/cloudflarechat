@@ -21,6 +21,7 @@ export interface Project {
   sentryDsn?: string;
   sentryConfigured?: boolean;
   port?: number;
+  files?: string[];
 }
 
 export interface LogEntry {
@@ -265,77 +266,135 @@ function PreviewTab({ project }: { project: Project }) {
 }
 
 function CodeTab({ project }: { project: Project }) {
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [fileContent, setFileContent] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+
+  const files = project.files || [];
+
+  // Group files by directory
+  const fileTree = files.reduce((acc, file) => {
+    const parts = file.split('/');
+    const dir = parts.length > 1 ? parts[0] : 'root';
+    if (!acc[dir]) {
+      acc[dir] = [];
+    }
+    acc[dir].push(file);
+    return acc;
+  }, {} as Record<string, string[]>);
+
+  const loadFileContent = async (filePath: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/project/${project.id}/file?path=${encodeURIComponent(filePath)}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setFileContent(data.content);
+        setSelectedFile(filePath);
+      }
+    } catch (error) {
+      console.error('Failed to load file:', error);
+      setFileContent('// Error loading file');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Auto-select first source file on mount
+  useEffect(() => {
+    if (files.length > 0 && !selectedFile) {
+      // Try to find a main source file
+      const mainFile = files.find(f => 
+        f.includes('src/App.tsx') || 
+        f.includes('src/App.ts') || 
+        f.includes('src/main.tsx') ||
+        f.includes('src/index.tsx')
+      ) || files[0];
+      loadFileContent(mainFile);
+    }
+  }, [files.length]);
+
+  if (files.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center p-8">
+        <div className="text-center space-y-4">
+          <div className="text-4xl">📁</div>
+          <h3 className="font-semibold text-lg">No files available</h3>
+          <p className="text-sm text-muted-foreground">
+            Project files will appear here once the project is created
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full overflow-auto p-4">
-      <div className="space-y-4">
-        <div>
-          <h3 className="font-semibold mb-2">Project Information</h3>
-          <Card className="p-4 space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Framework:</span>
-              <span className="text-sm font-medium capitalize">{project.framework}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Status:</span>
-              <span className="text-sm font-medium">{getStatusText(project.status)}</span>
-            </div>
-            {project.port && (
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Port:</span>
-                <span className="text-sm font-medium">{project.port}</span>
+    <div className="h-full flex">
+      {/* File Browser */}
+      <div className="w-64 border-r border-neutral-300 dark:border-neutral-800 overflow-y-auto bg-white dark:bg-neutral-900">
+        <div className="p-3 border-b border-neutral-300 dark:border-neutral-800">
+          <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+            Files ({files.length})
+          </h3>
+        </div>
+        <div className="p-2">
+          {Object.entries(fileTree).map(([dir, dirFiles]) => (
+            <div key={dir} className="mb-2">
+              <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 px-2 py-1 uppercase">
+                {dir}
               </div>
-            )}
-          </Card>
+              {dirFiles.map(file => {
+                const fileName = file.split('/').pop() || file;
+                const isSelected = selectedFile === file;
+                return (
+                  <button
+                    key={file}
+                    onClick={() => loadFileContent(file)}
+                    className={`w-full text-left px-3 py-1.5 text-sm rounded transition-colors ${
+                      isSelected
+                        ? 'bg-[#F48120]/10 text-[#F48120] font-medium'
+                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                    }`}
+                  >
+                    {fileName}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </div>
+      </div>
 
-        <div>
-          <h3 className="font-semibold mb-2">Description</h3>
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground">
-              {project.description || 'No description provided'}
-            </p>
-          </Card>
-        </div>
-
-        <div>
-          <h3 className="font-semibold mb-2">Features</h3>
-          <Card className="p-4">
-            <ul className="text-sm space-y-2">
-              <li className="flex items-center gap-2">
-                <CheckCircle size={16} className="text-green-500" />
-                <span>Modern {project.framework} setup</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle size={16} className="text-green-500" />
-                <span>TypeScript support</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle size={16} className="text-green-500" />
-                <span>Hot module replacement</span>
-              </li>
-              <li className="flex items-center gap-2">
-                {project.sentryConfigured ? (
-                  <CheckCircle size={16} className="text-green-500" />
-                ) : (
-                  <Clock size={16} className="text-yellow-500" />
-                )}
-                <span>Sentry monitoring {!project.sentryConfigured && '(pending)'}</span>
-              </li>
-            </ul>
-          </Card>
-        </div>
-
-        <div>
-          <h3 className="font-semibold mb-2">Next Steps</h3>
-          <Card className="p-4">
-            <ol className="text-sm space-y-2 list-decimal list-inside">
-              <li>Test the demo buttons in the preview</li>
-              <li>Check Sentry dashboard for captured events</li>
-              <li>Customize the code as needed</li>
-              <li>Deploy when ready</li>
-            </ol>
-          </Card>
-        </div>
+      {/* Code Viewer */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {selectedFile ? (
+          <>
+            <div className="px-4 py-2 border-b border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-between">
+              <span className="text-sm font-mono text-neutral-700 dark:text-neutral-300">
+                {selectedFile}
+              </span>
+              {loading && (
+                <span className="text-xs text-neutral-500">Loading...</span>
+              )}
+            </div>
+            <div className="flex-1 overflow-auto bg-neutral-50 dark:bg-neutral-950">
+              <pre className="p-4 text-sm font-mono text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap break-words">
+                {fileContent}
+              </pre>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center space-y-2">
+              <Code size={48} className="mx-auto text-neutral-400" />
+              <p className="text-sm text-muted-foreground">
+                Select a file to view its contents
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -473,29 +532,65 @@ function LogsTab({ logs, projectId }: { logs: LogEntry[]; projectId: string }) {
     );
   }
 
+  // Count log levels
+  const errorCount = projectLogs.filter(l => l.level === 'error').length;
+  const warnCount = projectLogs.filter(l => l.level === 'warn').length;
+  const successCount = projectLogs.filter(l => l.level === 'success').length;
+
   return (
-    <div className="h-full overflow-auto p-4 bg-neutral-900 font-mono text-sm">
-      <div className="space-y-1">
-        {projectLogs.map((log, index) => (
-          <div
-            key={`${log.timestamp}-${index}`}
-            className={`flex gap-3 ${
-              log.level === 'error' ? 'text-red-400' :
-              log.level === 'success' ? 'text-green-400' :
-              log.level === 'warn' ? 'text-yellow-400' :
-              'text-neutral-300'
-            }`}
-          >
-            <span className="text-neutral-500 text-xs whitespace-nowrap">
-              {new Date(log.timestamp).toLocaleTimeString()}
+    <div className="h-full flex flex-col bg-neutral-900">
+      {/* Log Stats Header */}
+      <div className="px-4 py-2 border-b border-neutral-700 flex items-center justify-between bg-neutral-800">
+        <div className="flex items-center gap-4 text-xs">
+          <span className="text-neutral-400">
+            Total: <span className="text-white font-medium">{projectLogs.length}</span>
+          </span>
+          {successCount > 0 && (
+            <span className="text-green-400">
+              Success: <span className="font-medium">{successCount}</span>
             </span>
-            <span className="uppercase text-xs font-bold w-16 whitespace-nowrap">
-              [{log.level}]
+          )}
+          {warnCount > 0 && (
+            <span className="text-yellow-400">
+              Warnings: <span className="font-medium">{warnCount}</span>
             </span>
-            <span className="flex-1 break-words">{log.message}</span>
-          </div>
-        ))}
-        <div ref={logsEndRef} />
+          )}
+          {errorCount > 0 && (
+            <span className="text-red-400">
+              Errors: <span className="font-medium">{errorCount}</span>
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 text-xs text-neutral-400">
+          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+          Live
+        </div>
+      </div>
+
+      {/* Logs */}
+      <div className="flex-1 overflow-auto p-4 font-mono text-sm">
+        <div className="space-y-1">
+          {projectLogs.map((log, index) => (
+            <div
+              key={`${log.timestamp}-${index}`}
+              className={`flex gap-3 ${
+                log.level === 'error' ? 'text-red-400' :
+                log.level === 'success' ? 'text-green-400' :
+                log.level === 'warn' ? 'text-yellow-400' :
+                'text-neutral-300'
+              }`}
+            >
+              <span className="text-neutral-500 text-xs whitespace-nowrap">
+                {new Date(log.timestamp).toLocaleTimeString()}
+              </span>
+              <span className="uppercase text-xs font-bold w-16 whitespace-nowrap">
+                [{log.level}]
+              </span>
+              <span className="flex-1 break-words">{log.message}</span>
+            </div>
+          ))}
+          <div ref={logsEndRef} />
+        </div>
       </div>
     </div>
   );

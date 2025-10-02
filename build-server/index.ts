@@ -19,12 +19,12 @@ const wss = new WebSocketServer({ server });
 // Project manager instance
 const projectManager = new ProjectManager();
 
-// Store all connected WebSocket clients
-const allWsClients = new Set<any>();
+// Store all connected WebSocket clients with their subscriptions
+const wsClients = new Map<any, { projectId: string | null; callback: ((log: any) => void) | null }>();
 
 // WebSocket connection for real-time logs
 wss.on('connection', (ws) => {
-  allWsClients.add(ws);
+  wsClients.set(ws, { projectId: null, callback: null });
   
   // Send a welcome message to confirm connection
   ws.send(JSON.stringify({ 
@@ -38,20 +38,31 @@ wss.on('connection', (ws) => {
       
       if (data.type === 'subscribe') {
         const projectId = data.projectId;
+        const clientData = wsClients.get(ws);
+        
+        if (!clientData) return;
+        
+        // Unsubscribe from previous project if any
+        if (clientData.callback && clientData.projectId) {
+          projectManager.unsubscribeFromLogs(clientData.projectId, clientData.callback);
+        }
+        
+        // Create a new callback for this client only
+        const callback = (log: any) => {
+          if (ws.readyState === 1) { // 1 = OPEN
+            try {
+              ws.send(JSON.stringify({ type: 'log', data: log }));
+            } catch (error) {
+              console.error('Error sending to client:', error);
+            }
+          }
+        };
         
         // Subscribe to project logs
-        projectManager.subscribeToLogs(projectId, (log) => {
-          // Broadcast to ALL connected clients
-          allWsClients.forEach(client => {
-            if (client.readyState === 1) { // 1 = OPEN
-              try {
-                client.send(JSON.stringify({ type: 'log', data: log }));
-              } catch (error) {
-                console.error('Error sending to client:', error);
-              }
-            }
-          });
-        });
+        projectManager.subscribeToLogs(projectId, callback);
+        
+        // Store the subscription info
+        wsClients.set(ws, { projectId, callback });
         
         // Send confirmation
         ws.send(JSON.stringify({ 
@@ -69,7 +80,12 @@ wss.on('connection', (ws) => {
   });
   
   ws.on('close', () => {
-    allWsClients.delete(ws);
+    // Unsubscribe from logs when client disconnects
+    const clientData = wsClients.get(ws);
+    if (clientData?.callback && clientData.projectId) {
+      projectManager.unsubscribeFromLogs(clientData.projectId, clientData.callback);
+    }
+    wsClients.delete(ws);
   });
 });
 
@@ -181,7 +197,30 @@ app.get('/api/project/:projectId/status', async (req: Request, res: Response) =>
     
     res.json(status);
   } catch (error) {
-    console.error('Error getting project status:', error);
+    // Check if it's a "not found" error - this is expected after server restart
+    const isNotFound = error instanceof Error && error.message.includes('not found');
+    if (!isNotFound) {
+      console.error('Error getting project status:', error);
+    }
+    res.status(isNotFound ? 404 : 500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Read a file from a project
+app.get('/api/project/:projectId/file', async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.params;
+    const { path } = req.query;
+    
+    if (!path || typeof path !== 'string') {
+      return res.status(400).json({ error: 'Missing required query parameter: path' });
+    }
+    
+    const content = await projectManager.readProjectFile(projectId, path);
+    
+    res.json({ content });
+  } catch (error) {
+    console.error('Error reading file:', error);
     res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
@@ -227,10 +266,14 @@ const shutdown = async (signal: string) => {
   console.log(`\n${signal} received, shutting down gracefully...`);
   
   try {
-    // Close WebSocket connections
-    wss.clients.forEach(client => {
-      client.close();
+    // Unsubscribe and close all WebSocket connections
+    wsClients.forEach((clientData, ws) => {
+      if (clientData.callback && clientData.projectId) {
+        projectManager.unsubscribeFromLogs(clientData.projectId, clientData.callback);
+      }
+      ws.close();
     });
+    wsClients.clear();
     
     // Clean up all dev servers
     await projectManager.cleanup();

@@ -119,8 +119,17 @@ export function useProjectManager() {
       if (response.ok) {
         return await response.json();
       }
+      // Silently handle 404s (project not found) - this is expected after server restart
+      if (response.status !== 404) {
+        console.error('Failed to get project status:', response.status, response.statusText);
+      }
     } catch (error) {
-      console.error('Failed to get project status:', error);
+      // Only log if it's not a network error (server might be starting up)
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        // Network error - server might be down/restarting, don't spam console
+      } else {
+        console.error('Failed to get project status:', error);
+      }
     }
     return null;
   }, []);
@@ -236,6 +245,10 @@ export function useProjectManager() {
         getProjectStatus(activeProject.id).then(status => {
           if (status) {
             setActiveProject(status);
+          } else {
+            // Project no longer exists on backend, clear it from state
+            setActiveProject(undefined);
+            safeSessionStorage.setItem('activeProject', '');
           }
         });
       }

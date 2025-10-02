@@ -38,9 +38,6 @@ export default defineConfig({
   server: {
     port: parseInt(process.env.PORT || '3000'),
     host: true
-  },
-  define: {
-    'import.meta.env.VITE_SENTRY_DSN': JSON.stringify(process.env.VITE_SENTRY_DSN || '')
   }
 })`,
 

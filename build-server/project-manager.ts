@@ -313,17 +313,41 @@ export class ProjectManager {
       });
 
       let output = '';
+      let stdoutBuffer = '';
+      let stderrBuffer = '';
 
       process.stdout?.on('data', (data) => {
         const message = data.toString();
         output += message;
-        this.log(projectId, 'info', message.trim());
+        
+        stdoutBuffer += message;
+        const lines = stdoutBuffer.split('\n');
+        stdoutBuffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const cleaned = this.cleanLogLine(line);
+          if (cleaned) {
+            this.log(projectId, 'info', cleaned);
+          }
+        }
       });
 
       process.stderr?.on('data', (data) => {
         const message = data.toString();
         output += message;
-        this.log(projectId, 'warn', message.trim());
+        
+        stderrBuffer += message;
+        const lines = stderrBuffer.split('\n');
+        stderrBuffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const cleaned = this.cleanLogLine(line);
+          if (cleaned) {
+            // npm warnings/errors come through stderr
+            const level = this.detectLogLevel(cleaned);
+            this.log(projectId, level, cleaned);
+          }
+        }
       });
 
       process.on('close', (code) => {
@@ -372,12 +396,37 @@ export class ProjectManager {
 
     this.processes.set(projectId, childProcess);
 
+    // Buffer to handle partial lines
+    let stdoutBuffer = '';
+    let stderrBuffer = '';
+
     childProcess.stdout?.on('data', (data) => {
-      this.log(projectId, 'info', data.toString().trim());
+      stdoutBuffer += data.toString();
+      const lines = stdoutBuffer.split('\n');
+      stdoutBuffer = lines.pop() || ''; // Keep the incomplete line in buffer
+
+      for (const line of lines) {
+        const cleaned = this.cleanLogLine(line);
+        if (cleaned) {
+          const level = this.detectLogLevel(cleaned);
+          this.log(projectId, level, cleaned);
+        }
+      }
     });
 
     childProcess.stderr?.on('data', (data) => {
-      this.log(projectId, 'warn', data.toString().trim());
+      stderrBuffer += data.toString();
+      const lines = stderrBuffer.split('\n');
+      stderrBuffer = lines.pop() || ''; // Keep the incomplete line in buffer
+
+      for (const line of lines) {
+        const cleaned = this.cleanLogLine(line);
+        if (cleaned) {
+          // stderr might not always be errors (Vite outputs to stderr)
+          const level = this.detectLogLevel(cleaned);
+          this.log(projectId, level, cleaned);
+        }
+      }
     });
 
     childProcess.on('close', (code) => {
@@ -393,6 +442,71 @@ export class ProjectManager {
     this.log(projectId, 'success', `Dev server running at http://localhost:${port}`);
 
     return { port, url: `http://localhost:${port}` };
+  }
+
+  private cleanLogLine(line: string): string {
+    // Remove ANSI escape codes (colors, cursor movement, etc.)
+    const cleaned = line
+      .replace(/\x1b\[[0-9;]*m/g, '') // Color codes
+      .replace(/\x1b\[[0-9;]*[A-Za-z]/g, '') // Other ANSI codes
+      .replace(/\r/g, '') // Carriage returns
+      .trim();
+
+    // Filter out empty lines and common noise
+    if (!cleaned) return '';
+    if (cleaned.length < 2) return '';
+    
+    // Filter out progress indicators and spinner characters
+    if (/^[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏▀▄█]$/.test(cleaned)) return '';
+    
+    return cleaned;
+  }
+
+  private detectLogLevel(message: string): 'info' | 'error' | 'success' | 'warn' {
+    const lower = message.toLowerCase();
+    
+    // Error patterns
+    if (
+      lower.includes('error') ||
+      lower.includes('failed') ||
+      lower.includes('exception') ||
+      lower.includes('fatal') ||
+      lower.match(/\berr\b/) ||
+      lower.includes('cannot find') ||
+      lower.includes('not found') && lower.includes('module')
+    ) {
+      return 'error';
+    }
+    
+    // Warning patterns
+    if (
+      lower.includes('warn') ||
+      lower.includes('warning') ||
+      lower.includes('deprecated') ||
+      lower.includes('conflict')
+    ) {
+      return 'warn';
+    }
+    
+    // Success patterns
+    if (
+      lower.includes('ready') ||
+      lower.includes('compiled') ||
+      lower.includes('success') ||
+      lower.includes('✓') ||
+      lower.includes('✔') ||
+      lower.match(/server.*running/) ||
+      lower.match(/local.*http/) ||
+      lower.includes('hmr') ||
+      lower.includes('updated') && (lower.includes('.tsx') || lower.includes('.ts') || lower.includes('.jsx')) ||
+      lower.includes('page reload') ||
+      lower.includes('reloaded') ||
+      lower.match(/\d+\s*ms\b/) && lower.includes('vite')
+    ) {
+      return 'success';
+    }
+    
+    return 'info';
   }
 
   private getStartCommand(framework: string, port: number): { command: string; args: string[] } {
@@ -474,6 +588,9 @@ export class ProjectManager {
     const sentryConfigured = existsSync(join(project.path, 'src', 'sentry.ts')) ||
                            existsSync(join(project.path, 'sentry.config.ts'));
 
+    // List all files in the project (recursively)
+    const files = await this.listProjectFiles(project.path);
+
     // Determine status based on project state
     let status: 'creating' | 'installing' | 'starting' | 'ready' | 'error' = 'ready';
     if (running && port) {
@@ -492,8 +609,39 @@ export class ProjectManager {
       port,
       url: port ? `http://localhost:${port}` : undefined,
       devServerUrl: port ? `http://localhost:${port}` : undefined,
+      files,
       sentryConfigured
     };
+  }
+
+  private async listProjectFiles(projectPath: string, relativePath = ''): Promise<string[]> {
+    const files: string[] = [];
+    const fullPath = join(projectPath, relativePath);
+
+    try {
+      const entries = await readdir(fullPath, { withFileTypes: true });
+
+      for (const entry of entries) {
+        // Skip node_modules and other common directories
+        if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist' || entry.name === 'build') {
+          continue;
+        }
+
+        const entryPath = join(relativePath, entry.name);
+
+        if (entry.isDirectory()) {
+          // Recursively list files in subdirectories
+          const subFiles = await this.listProjectFiles(projectPath, entryPath);
+          files.push(...subFiles);
+        } else {
+          files.push(entryPath);
+        }
+      }
+    } catch (error) {
+      console.error(`Error listing files in ${fullPath}:`, error);
+    }
+
+    return files;
   }
 
   async listProjects(): Promise<ProjectStatus[]> {
@@ -501,6 +649,26 @@ export class ProjectManager {
       Array.from(this.projects.keys()).map(id => this.getProjectStatus(id))
     );
     return statuses;
+  }
+
+  async readProjectFile(projectId: string, filePath: string): Promise<string> {
+    const project = this.projects.get(projectId);
+    if (!project) {
+      throw new Error(`Project ${projectId} not found`);
+    }
+
+    // Security: ensure file is within project directory
+    const fullPath = resolve(join(project.path, filePath));
+    if (!fullPath.startsWith(resolve(project.path))) {
+      throw new Error('Invalid file path');
+    }
+
+    try {
+      const content = await readFile(fullPath, 'utf-8');
+      return content;
+    } catch (error) {
+      throw new Error(`Failed to read file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   async configureSentry(projectId: string, sentryDsn: string): Promise<void> {
