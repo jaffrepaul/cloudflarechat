@@ -13,10 +13,10 @@ import {
   createUIMessageStreamResponse,
   type ToolSet
 } from "ai";
-// Workers AI Provider (currently active)
-import { createWorkersAI } from "workers-ai-provider";
-// OpenAI Provider (uncomment to use OpenAI instead)
-// import { createOpenAI } from "@ai-sdk/openai";
+// Workers AI Provider (uncomment if switching back to Workers AI)
+// import { createWorkersAI } from "workers-ai-provider";
+// OpenAI Provider (currently active for AI Gateway analytics)
+import { createOpenAI } from "@ai-sdk/openai";
 import { processToolCalls, cleanupMessages } from "./utils";
 import { tools, executions } from "./tools";
 
@@ -42,16 +42,16 @@ export class Chat extends AIChatAgent<Env> {
     };
 
     // ========== AI PROVIDER CONFIGURATION ==========
-    // Option 1: Workers AI (currently active)
-    const workersai = createWorkersAI({ binding: this.env.AI });
-    const model = workersai("@cf/meta/llama-3.1-8b-instruct" as any);
+    // Option 1: Workers AI (bypasses AI Gateway - no analytics)
+    // const workersai = createWorkersAI({ binding: this.env.AI });
+    // const model = workersai("@cf/meta/llama-3.1-8b-instruct" as any);
 
-    // Option 2: OpenAI with AI Gateway (uncomment to use)
-    // const openai = createOpenAI({
-    //   apiKey: process.env.OPENAI_API_KEY,
-    //   baseURL: process.env.GATEWAY_BASE_URL, // Optional: AI Gateway URL
-    // });
-    // const model = openai("gpt-4o-2024-11-20");
+    // Option 2: OpenAI with AI Gateway (currently active - enables analytics)
+    const openai = createOpenAI({
+      apiKey: this.env.OPENAI_API_KEY,
+      baseURL: this.env.GATEWAY_BASE_URL // Routes through AI Gateway for analytics
+    });
+    const model = openai("gpt-4o-2024-11-20");
 
     const stream = createUIMessageStream({
       execute: async ({ writer }) => {
@@ -195,24 +195,24 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/check-open-ai-key") {
-      // Workers AI: Check if binding exists
+      // OpenAI: Check if API key exists
+      const hasOpenAIKey = !!env.OPENAI_API_KEY;
       return Response.json({
-        success: !!env.AI
+        success: hasOpenAIKey
       });
 
-      // OpenAI: Uncomment this when using OpenAI
-      // const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
+      // Workers AI: Uncomment this when using Workers AI
       // return Response.json({
-      //   success: hasOpenAIKey
+      //   success: !!env.AI
       // });
     }
 
-    // OpenAI: Uncomment to warn if API key is missing
-    // if (!process.env.OPENAI_API_KEY) {
-    //   console.error(
-    //     "OPENAI_API_KEY is not set, don't forget to set it locally in .dev.vars, and use `wrangler secret bulk .dev.vars` to upload it to production"
-    //   );
-    // }
+    // OpenAI: Warn if API key is missing
+    if (!env.OPENAI_API_KEY) {
+      console.error(
+        "OPENAI_API_KEY is not set, don't forget to set it locally in .dev.vars, and use `wrangler secret bulk .dev.vars` to upload it to production"
+      );
+    }
 
     return (
       // Route the request to our agent or return 404 if not found
