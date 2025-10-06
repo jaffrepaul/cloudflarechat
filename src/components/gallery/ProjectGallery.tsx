@@ -93,7 +93,8 @@ export function ProjectGallery({
 
               <p className="text-sm text-muted-foreground">
                 This action will permanently delete all projects, stop all dev
-                servers, remove all files, and clear the chat history. This cannot be undone.
+                servers, remove all files, and clear the chat history. This
+                cannot be undone.
               </p>
 
               <div className="flex gap-2 justify-end">

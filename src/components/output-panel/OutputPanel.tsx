@@ -270,7 +270,7 @@ function PreviewTab({ project }: { project: Project }) {
       const timer = setTimeout(() => {
         setShowIframe(true);
       }, 2000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [project.devServerUrl, project.status]);
@@ -341,7 +341,7 @@ function PreviewTab({ project }: { project: Project }) {
           </button>
         </div>
       )}
-      
+
       {/* Only render iframe once triggered */}
       {showIframe && (
         <iframe

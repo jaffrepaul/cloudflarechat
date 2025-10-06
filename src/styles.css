@@ -49,10 +49,10 @@
   --color-white: #fff;
 
   /* Sentry brand colors */
-  --color-sentry-purple: #9A5CF5;
-  --color-sentry-pink: #E96B8E;
-  --color-sentry-dark-purple: #6A28C9;
-  --color-sentry-light-purple: #C298FF;
+  --color-sentry-purple: #9a5cf5;
+  --color-sentry-pink: #e96b8e;
+  --color-sentry-dark-purple: #6a28c9;
+  --color-sentry-light-purple: #c298ff;
 
   /* Tailwind primary color (used by bg-primary, text-primary-foreground) */
   --color-primary: var(--color-sentry-purple);

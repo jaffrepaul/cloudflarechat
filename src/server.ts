@@ -13,17 +13,12 @@ import {
   createUIMessageStreamResponse,
   type ToolSet
 } from "ai";
-import { openai } from "@ai-sdk/openai";
+// Workers AI Provider (currently active)
+import { createWorkersAI } from "workers-ai-provider";
+// OpenAI Provider (uncomment to use OpenAI instead)
+// import { createOpenAI } from "@ai-sdk/openai";
 import { processToolCalls, cleanupMessages } from "./utils";
 import { tools, executions } from "./tools";
-// import { env } from "cloudflare:workers";
-
-const model = openai("gpt-4o-2024-11-20");
-// Cloudflare AI Gateway
-// const openai = createOpenAI({
-//   apiKey: env.OPENAI_API_KEY,
-//   baseURL: env.GATEWAY_BASE_URL,
-// });
 
 /**
  * Chat Agent implementation that handles real-time AI chat interactions
@@ -45,6 +40,18 @@ export class Chat extends AIChatAgent<Env> {
       ...tools,
       ...this.mcp.getAITools()
     };
+
+    // ========== AI PROVIDER CONFIGURATION ==========
+    // Option 1: Workers AI (currently active)
+    const workersai = createWorkersAI({ binding: this.env.AI });
+    const model = workersai("@cf/meta/llama-3.1-8b-instruct" as any);
+
+    // Option 2: OpenAI with AI Gateway (uncomment to use)
+    // const openai = createOpenAI({
+    //   apiKey: process.env.OPENAI_API_KEY,
+    //   baseURL: process.env.GATEWAY_BASE_URL, // Optional: AI Gateway URL
+    // });
+    // const model = openai("gpt-4o-2024-11-20");
 
     const stream = createUIMessageStream({
       execute: async ({ writer }) => {
@@ -188,16 +195,25 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/check-open-ai-key") {
-      const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
+      // Workers AI: Check if binding exists
       return Response.json({
-        success: hasOpenAIKey
+        success: !!env.AI
       });
+
+      // OpenAI: Uncomment this when using OpenAI
+      // const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
+      // return Response.json({
+      //   success: hasOpenAIKey
+      // });
     }
-    if (!process.env.OPENAI_API_KEY) {
-      console.error(
-        "OPENAI_API_KEY is not set, don't forget to set it locally in .dev.vars, and use `wrangler secret bulk .dev.vars` to upload it to production"
-      );
-    }
+
+    // OpenAI: Uncomment to warn if API key is missing
+    // if (!process.env.OPENAI_API_KEY) {
+    //   console.error(
+    //     "OPENAI_API_KEY is not set, don't forget to set it locally in .dev.vars, and use `wrangler secret bulk .dev.vars` to upload it to production"
+    //   );
+    // }
+
     return (
       // Route the request to our agent or return 404 if not found
       (await routeAgentRequest(request, env)) ||
