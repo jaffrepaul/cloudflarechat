@@ -15,8 +15,10 @@ import {
 } from "ai";
 // Workers AI Provider (uncomment if switching back to Workers AI)
 // import { createWorkersAI } from "workers-ai-provider";
-// OpenAI Provider (currently active for AI Gateway analytics)
+// AI Providers - All route through AI Gateway for analytics
 import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { processToolCalls, cleanupMessages } from "./utils";
 import { tools, executions } from "./tools";
 
@@ -24,6 +26,84 @@ import { tools, executions } from "./tools";
  * Chat Agent implementation that handles real-time AI chat interactions
  */
 export class Chat extends AIChatAgent<Env> {
+  /**
+   * Dynamically selects a model from different providers
+   * This creates diverse analytics in Cloudflare AI Gateway
+   */
+  private selectModel(
+    openai: ReturnType<typeof createOpenAI>,
+    anthropic: ReturnType<typeof createAnthropic> | null,
+    google: ReturnType<typeof createGoogleGenerativeAI> | null
+  ) {
+    const messageCount = this.messages.length;
+    
+    // Check for tool calls (complex tasks)
+    const hasToolCalls = this.messages.some(
+      msg => msg.parts?.some(part => part.type === "tool-call")
+    );
+    
+    const random = Math.random();
+    
+    // Define available model options with their capabilities
+    const modelOptions = [
+      // OpenAI Models
+      { provider: "openai", model: "gpt-4o-2024-11-20", capability: "high", weight: 0.25 },
+      { provider: "openai", model: "gpt-4o-mini", capability: "medium", weight: 0.20 },
+      { provider: "openai", model: "gpt-4-turbo", capability: "high", weight: 0.15 },
+      { provider: "openai", model: "gpt-3.5-turbo", capability: "low", weight: 0.10 },
+    ];
+    
+    // Add Anthropic if available
+    if (anthropic) {
+      modelOptions.push(
+        { provider: "anthropic", model: "claude-3-5-sonnet-20241022", capability: "high", weight: 0.20 },
+        { provider: "anthropic", model: "claude-3-5-haiku-20241022", capability: "medium", weight: 0.10 }
+      );
+    }
+    
+    // Add Google if available
+    if (google) {
+      modelOptions.push(
+        { provider: "google", model: "gemini-2.0-flash-exp", capability: "high", weight: 0.15 },
+        { provider: "google", model: "gemini-1.5-flash", capability: "medium", weight: 0.10 }
+      );
+    }
+    
+    // Normalize weights
+    const totalWeight = modelOptions.reduce((sum, opt) => sum + opt.weight, 0);
+    const normalizedOptions = modelOptions.map(opt => ({
+      ...opt,
+      weight: opt.weight / totalWeight
+    }));
+    
+    // Filter models based on task complexity
+    let availableModels = normalizedOptions;
+    if (hasToolCalls) {
+      // For complex tasks, prefer high capability models
+      availableModels = normalizedOptions.filter(opt => opt.capability === "high");
+    }
+    
+    // Select model using weighted random selection
+    let cumulativeWeight = 0;
+    const selectedOption = availableModels.find(opt => {
+      cumulativeWeight += opt.weight;
+      return random < cumulativeWeight;
+    }) || availableModels[0]; // Fallback to first option
+    
+    console.log(`🤖 Selected: ${selectedOption.provider}/${selectedOption.model} (messages: ${messageCount}, tools: ${hasToolCalls})`);
+    
+    // Return the appropriate model instance
+    switch (selectedOption.provider) {
+      case "anthropic":
+        return anthropic!(selectedOption.model);
+      case "google":
+        return google!(selectedOption.model);
+      case "openai":
+      default:
+        return openai(selectedOption.model);
+    }
+  }
+  
   /**
    * Handles incoming chat messages and manages the response stream
    */
@@ -42,16 +122,26 @@ export class Chat extends AIChatAgent<Env> {
     };
 
     // ========== AI PROVIDER CONFIGURATION ==========
-    // Option 1: Workers AI (bypasses AI Gateway - no analytics)
-    // const workersai = createWorkersAI({ binding: this.env.AI });
-    // const model = workersai("@cf/meta/llama-3.1-8b-instruct" as any);
-
-    // Option 2: OpenAI with AI Gateway (currently active - enables analytics)
+    // Initialize OpenAI (always available)
     const openai = createOpenAI({
       apiKey: this.env.OPENAI_API_KEY,
-      baseURL: this.env.GATEWAY_BASE_URL // Routes through AI Gateway for analytics
+      baseURL: this.env.OPENAI_GATEWAY_URL // Routes through AI Gateway
     });
-    const model = openai("gpt-4o-2024-11-20");
+    
+    // Initialize Anthropic if API key is available
+    const anthropic = this.env.ANTHROPIC_API_KEY ? createAnthropic({
+      apiKey: this.env.ANTHROPIC_API_KEY,
+      baseURL: this.env.ANTHROPIC_GATEWAY_URL // Routes through AI Gateway
+    }) : null;
+    
+    // Initialize Google if API key is available
+    const google = this.env.GOOGLE_API_KEY ? createGoogleGenerativeAI({
+      apiKey: this.env.GOOGLE_API_KEY,
+      baseURL: this.env.GOOGLE_GATEWAY_URL // Routes through AI Gateway
+    }) : null;
+    
+    // Dynamic model selection across all providers for rich analytics
+    const model = this.selectModel(openai, anthropic, google);
 
     const stream = createUIMessageStream({
       execute: async ({ writer }) => {
