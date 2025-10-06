@@ -255,8 +255,9 @@ function PreviewTab({ project }: { project: Project }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hasInitializedRef = useRef(false);
 
-  // Show iframe immediately when we have a devServerUrl and status is ready
+  // Show iframe when we have a devServerUrl and status is ready
   useEffect(() => {
+    // Reset state when URL changes or becomes unavailable
     if (!project.devServerUrl || !project.status) {
       hasInitializedRef.current = false;
       setShowIframe(false);
@@ -274,12 +275,6 @@ function PreviewTab({ project }: { project: Project }) {
       return () => clearTimeout(timer);
     }
   }, [project.devServerUrl, project.status]);
-
-  // Reset when URL changes
-  useEffect(() => {
-    hasInitializedRef.current = false;
-    setShowIframe(false);
-  }, [project.devServerUrl]);
 
   const handleRefresh = () => {
     setIframeKey((prev) => prev + 1);
