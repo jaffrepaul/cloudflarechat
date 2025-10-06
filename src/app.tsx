@@ -5,6 +5,7 @@ import { isToolUIPart } from "ai";
 import { useAgentChat } from "agents/ai-react";
 import type { UIMessage } from "@ai-sdk/react";
 import type { tools } from "./tools";
+import type { Project } from "@/components/output-panel/OutputPanel";
 
 // Component imports
 import { Button } from "@/components/button/Button";
@@ -148,7 +149,12 @@ export default function Chat() {
     // Look for createApp tool results
     for (const part of lastMessage.parts) {
       if (isToolUIPart(part) && part.type === "tool-createApp" && part.output) {
-        const output = part.output as any;
+        const output = part.output as {
+          success: boolean;
+          projectId: string;
+          projectName?: string;
+          framework?: string;
+        };
         if (output.success && output.projectId) {
           // Fetch updated project status
           fetchProjects();
@@ -161,7 +167,7 @@ export default function Chat() {
                 `http://localhost:3001/api/project/${output.projectId}/status`
               );
               if (response.ok) {
-                const projectStatus = (await response.json()) as any;
+                const projectStatus = (await response.json()) as Project;
                 setActiveProject(projectStatus);
               }
             } catch (error) {
@@ -183,7 +189,11 @@ export default function Chat() {
         part.type === "tool-startDevServer" &&
         part.output
       ) {
-        const output = part.output as any;
+        const output = part.output as {
+          success: boolean;
+          url?: string;
+          port?: number;
+        };
         if (output.success && output.url) {
           // Refresh the active project from the API
           setTimeout(async () => {
@@ -193,7 +203,7 @@ export default function Chat() {
                   `http://localhost:3001/api/project/${activeProject.id}/status`
                 );
                 if (response.ok) {
-                  const projectStatus = (await response.json()) as any;
+                  const projectStatus = (await response.json()) as Project;
                   setActiveProject(projectStatus);
                 }
               } catch (error) {
@@ -210,7 +220,7 @@ export default function Chat() {
         part.type === "tool-configureSentry" &&
         part.output
       ) {
-        const output = part.output as any;
+        const output = part.output as { success: boolean };
         if (output.success && activeProject) {
           setActiveProject({
             ...activeProject,
@@ -312,6 +322,7 @@ export default function Chat() {
               {/* Toggle button when gallery is closed */}
               {!showGallery && (
                 <button
+                  type="button"
                   className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors mr-1"
                   onClick={() => setShowGallery(true)}
                   title="Show projects"
@@ -604,7 +615,9 @@ export default function Chat() {
       </div>
 
       {/* Resizer */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: This is a resizer handle for mouse dragging */}
       <div
+        role="presentation"
         className="w-1 bg-neutral-300 dark:bg-[#9A5CF5]/20 hover:bg-[#9A5CF5] dark:hover:bg-[#9A5CF5] cursor-col-resize transition-colors lg:block hidden"
         onMouseDown={() => setIsResizing(true)}
       />

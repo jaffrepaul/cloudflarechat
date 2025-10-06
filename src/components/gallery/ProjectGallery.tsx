@@ -52,6 +52,7 @@ export function ProjectGallery({
         <div className="flex items-center gap-2">
           {projects.length > 0 && (
             <button
+              type="button"
               className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
               onClick={() => setShowDeleteConfirm(true)}
               title="Delete all projects"
@@ -61,6 +62,7 @@ export function ProjectGallery({
             </button>
           )}
           <button
+            type="button"
             className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
             onClick={onToggle}
             title={isOpen ? "Hide projects" : "Show projects"}
@@ -134,8 +136,9 @@ export function ProjectGallery({
                     : ""
                 }`}
               >
-                <div
-                  className="cursor-pointer"
+                <button
+                  type="button"
+                  className="cursor-pointer w-full text-left"
                   onClick={() => onSelectProject(project)}
                 >
                   <div className="flex items-start justify-between">
@@ -163,6 +166,7 @@ export function ProjectGallery({
 
                       {onDeleteProject && (
                         <button
+                          type="button"
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -196,7 +200,7 @@ export function ProjectGallery({
                       </a>
                     </div>
                   )}
-                </div>
+                </button>
               </Card>
             ))}
           </div>

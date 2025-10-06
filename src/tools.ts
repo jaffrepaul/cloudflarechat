@@ -31,7 +31,7 @@ const getWeatherInformation = tool({
 const getLocalTime = tool({
   description: "get the local time for a specified location",
   inputSchema: z.object({ location: z.string() }),
-  execute: async ({ location }) => {
+  execute: async () => {
     return "10am";
   }
 });

@@ -181,10 +181,7 @@ export function useProjectManager() {
       if (isCleanup) return; // Don't reconnect if we're cleaning up
 
       // Calculate exponential backoff delay
-      const delay = Math.min(
-        1000 * Math.pow(2, reconnectAttempts),
-        maxReconnectDelay
-      );
+      const delay = Math.min(1000 * 2 ** reconnectAttempts, maxReconnectDelay);
 
       try {
         const ws = new WebSocket(WS_URL);

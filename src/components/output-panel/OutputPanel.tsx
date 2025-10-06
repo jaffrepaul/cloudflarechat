@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card } from "@/components/card/Card";
 import {
   Monitor,
@@ -57,7 +57,7 @@ export function OutputPanel({
     if (logsEndRef.current) {
       logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [logs]);
+  }, []);
 
   if (!project) {
     return (
@@ -228,6 +228,7 @@ function TabButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       className={`
@@ -315,6 +316,7 @@ function PreviewTab({ project }: { project: Project }) {
       {showIframe && (
         <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
           <button
+            type="button"
             onClick={handleRefresh}
             className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#2d2438] border border-neutral-300 dark:border-[#9A5CF5]/30 rounded-md shadow-sm hover:bg-neutral-50 dark:hover:bg-[#362d41] transition-colors text-sm"
             title="Refresh preview"
@@ -329,7 +331,9 @@ function PreviewTab({ project }: { project: Project }) {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-label="Refresh icon"
             >
+              <title>Refresh</title>
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
             </svg>
             Refresh
@@ -374,24 +378,27 @@ function CodeTab({ project }: { project: Project }) {
     {} as Record<string, string[]>
   );
 
-  const loadFileContent = async (filePath: string) => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `http://localhost:3001/api/project/${project.id}/file?path=${encodeURIComponent(filePath)}`
-      );
-      if (response.ok) {
-        const data = (await response.json()) as { content: string };
-        setFileContent(data.content);
-        setSelectedFile(filePath);
+  const loadFileContent = useCallback(
+    async (filePath: string) => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `http://localhost:3001/api/project/${project.id}/file?path=${encodeURIComponent(filePath)}`
+        );
+        if (response.ok) {
+          const data = (await response.json()) as { content: string };
+          setFileContent(data.content);
+          setSelectedFile(filePath);
+        }
+      } catch (error) {
+        console.error("Failed to load file:", error);
+        setFileContent("// Error loading file");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to load file:", error);
-      setFileContent("// Error loading file");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [project.id]
+  );
 
   // Auto-select first source file on mount
   useEffect(() => {
@@ -407,7 +414,7 @@ function CodeTab({ project }: { project: Project }) {
         ) || files[0];
       loadFileContent(mainFile);
     }
-  }, [files.length]);
+  }, [files, selectedFile, loadFileContent]);
 
   if (files.length === 0) {
     return (
@@ -444,6 +451,7 @@ function CodeTab({ project }: { project: Project }) {
                 return (
                   <button
                     key={file}
+                    type="button"
                     onClick={() => loadFileContent(file)}
                     className={`w-full text-left px-3 py-1.5 text-sm rounded transition-colors ${
                       isSelected
@@ -617,7 +625,7 @@ function LogsTab({ logs, projectId }: { logs: LogEntry[]; projectId: string }) {
     if (logsEndRef.current) {
       logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [projectLogs.length]);
+  }, []);
 
   if (projectLogs.length === 0) {
     return (
